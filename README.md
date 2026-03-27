@@ -40,7 +40,7 @@ pip install -r requirements.txt
 
 ### 2. Run the Engine
 ```bash
-python main.py --url "https://www.nsf.gov/pubs/2023/nsf23561/nsf23561.htm" --out_dir ./out
+python main.py --url "https://new.nsf.gov/funding/opportunities/pose-pathways-enable-open-source-ecosystems/nsf24-606/solicitation" --out_dir ./out
 ```
 
 ### 3. The Output

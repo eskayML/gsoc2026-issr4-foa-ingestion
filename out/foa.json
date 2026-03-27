@@ -1,27 +1,33 @@
 {
     "metadata": {
-        "generated_at": "2026-03-27T15:02:02.660727Z",
+        "generated_at": "2026-03-27T15:12:45.758725Z",
         "schema_version": "1.1.0",
         "extractor_engine": "ISSR4-Primary"
     },
     "data": {
-        "foa_id": "NSF23-561",
-        "title": "NSF 23-561: Computer and Information Science and Engineering Core Programs",
+        "foa_id": "NSF24-606",
+        "title": "NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE) | NSF - U.S. National Science Foundation",
         "agency": "National Science Foundation",
-        "open_date": "2024-01-15",
-        "close_date": "2024-10-23",
-        "eligibility": "Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems. Maximum award is $500,000....",
-        "description": "Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems. Maximum award is $500,000.",
-        "award_ceiling": 100000000,
+        "open_date": "2024-09-13",
+        "close_date": "2021-11-15",
+        "eligibility": "Eligibility Information\nWho May Submit Proposals:\nProposals may only be submitted by the following:\n- Institutions of Higher Education (IHEs) - Two- and four-year IHEs (including community colleges) accredited in, and having a campus located in the US, acting on behalf of their faculty members. Spec...",
+        "description": "NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE)\nProgram Solicitation\nDocument Information\nDocument History\n- Posted: September 13, 2024\n- Replaces: NSF 23-556\n- Replaced by: NSF 26-506\nCreate a PDF\nTo save a PDF of this solicitation, select Print to PDF in your browser's print options.\nProgram Solicitation NSF 24-606\n|\nU.S. National Science Foundation |\nFull Proposal Deadline(s) (due by 5 p.m. submitting organization's local time):\nJanuary 14, 2025\nSecond Tuesday in January, Annually Thereafter\nPhase I Proposals\nSeptember 02, 2025\nFirst Tuesday in September, Annually Thereafter\nPhase I and Phase II Proposals\nImportant Information And Revision Notes\nAny proposal submitted in response to this solicitation should be submitted in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG) that is in effect for the relevant due date to which the proposal is being submitted. The NSF PAPPG is regularly revised and it is the responsibility of the proposer to ensure that the proposal meets the requirements specified in this solicitation and the applicable version of the PAPPG. Submitting a proposal prior to a specified deadline does not negate this requirement.\nSummary Of Program Requirements\nGeneral Information\nProgram Title:\nPathways to Enable Open-Source Ecosystems (POSE)\nSynopsis of Program:\nThe Pathways to Enable Open-Source Ecosystems (POSE) program aims to harness the power of open-source development for the creation of new technology solutions to problems of national and societal importance. Many NSF-funded projects result in publicly accessible, modifiable, and distributable open-source products, including software, hardware, models, specifications, programming languages, or data platforms that catalyze further innovation. In some cases, an open-source product that shows potential for wide adoption forms the basis for a self-sustaining open-source ecosystem (OSE) that comprises a leadership team; a managing organization with a well-defi...",
+        "award_ceiling": 27800000,
         "award_floor": null,
-        "source_url": "https://www.nsf.gov/pubs/2023/nsf23561/nsf23561.htm",
+        "source_url": "https://new.nsf.gov/funding/opportunities/pose-pathways-enable-open-source-ecosystems/nsf24-606/solicitation",
         "tags": [
             "artificial_intelligence",
-            "computer_systems"
+            "computer_systems",
+            "health_sciences",
+            "center_grant",
+            "training_grant"
         ],
         "tag_scores": {
-            "artificial_intelligence": 0.6,
-            "computer_systems": 0.24
+            "artificial_intelligence": 0.3,
+            "computer_systems": 0.72,
+            "health_sciences": 0.9,
+            "center_grant": 0.27,
+            "training_grant": 0.81
         }
     }
 }
