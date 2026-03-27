@@ -1,10 +1,5 @@
-foa_id,title,agency,open_date,close_date,eligibility,program_description,award_ceiling,award_floor,source_url,tags,tag_scores
-NSF26-506,NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE) | NSF - U.S. National Science Foundation,National Science Foundation,2026-02-19,2027-03-02,"Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.
-Proposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Use the version of the guide that is in effect on the proposal's due date.
-Summary Of Program Requirements
-General Information
-Program Title:
-Pathways","NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)
+foa_id,title,agency,open_date,close_date,eligibility,program_description,award_range,source_url,tag_scores,tags_metadata
+NSF26-506,NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE) | NSF - U.S. National Science Foundation,National Science Foundation (NSF),2026-02-19,2027-03-02,"Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts. Proposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Use the version of the guide that is in effect on the proposal's due date. Summary Of Program Requirements General Information Program Title: Pathways","NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)
 Program Solicitation
 Document Information
 Document History
@@ -30,5 +25,4 @@ General Information
 Program Title:
 Pathways to Enable Secure Open-Source Ecosystems (PESOSE)
 Synopsis of Program:
-The Pathways to Enable Secure Open-Source Ecosystems (PESOSE) program supports the translation of open-source science and engineering-focused research products into safe and sustainable ecosystems that address national and societal challenges. Open-source tools such as software, hardware, machine learning models, languages, and data platforms are designed to be shared as they are publicly-accessible and modifiable. These tools spark innovation in critical fields as varied as artificial intelligence (AI) and cloud computing, banking, healthcare, research, education, next-gen manufacturing, mobility, and National security (including cybersecurity).
-PESOSE supports the creation of managing organizations for these ecosystems, ensuring strong governance, distributed developme",40000000,,https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,artificial_intelligence|computer_systems|health_sciences|open_source|educational_institutions|innovation|security,"{""artificial_intelligence"": 0.6, ""computer_systems"": 0.8, ""health_sciences"": 0.6, ""open_source"": 0.3, ""educational_institutions"": 0.48, ""innovation"": 0.21, ""security"": 1.0}"
+The Pathways to Enable Secure Open-Source Ecosystems (PESOSE) program supports the translation of open-source science and engineering-focused research products into safe and sustainable ecosystems that address national and societal challenges. Open-source tools such as software, h","$300,000 to $1,500,000",https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,"{""artificial_intelligence"": 0.6, ""computer_systems"": 0.8, ""health_sciences"": 0.6, ""open_source"": 0.3, ""educational_institutions"": 0.48, ""innovation"": 0.21, ""security"": 1.0}",artificial_intelligence|computer_systems|health_sciences|open_source|educational_institutions|innovation|security

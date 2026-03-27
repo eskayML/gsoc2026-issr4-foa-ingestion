@@ -15,24 +15,23 @@ from rich.table import Table
 
 console = Console()
 
-# --- Pydantic Schema Definition ---
+# --- Pydantic Schema Definition (Mapped Exactly to GSoC Screening Task) ---
 class FOAMetadata(BaseModel):
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-    schema_version: str = "1.2.0"
-    extractor_engine: str = "ISSR4-MultiSource"
+    schema_version: str = "1.3.0"
+    extractor_engine: str = "ISSR4-Final-Nail"
 
 class FOARecord(BaseModel):
     foa_id: str
     title: str
     agency: str
-    open_date: Optional[str]
-    close_date: Optional[str]
+    open_date: Optional[str] # ISO format
+    close_date: Optional[str] # ISO format
     eligibility: str
     program_description: str
-    award_ceiling: Optional[int] = None
-    award_floor: Optional[int] = None
+    award_range: str # Unified field to match mentor description
     source_url: str
-    tags: List[str]
+    tags: Dict[str, List[str]] # Grouped by Category as requested
     tag_scores: Dict[str, float]
 
 class FOAResponse(BaseModel):
@@ -54,40 +53,36 @@ class ExtractionEngine:
             response.raise_for_status()
             self.raw_html = response.text
         except Exception as e:
-            console.print(f"[bold red]❌ Error: Failed to fetch {self.url} ({e})[/bold red]")
+            console.print(f"[bold red]❌ Network Error: {self.url} ({e})[/bold red]")
             raise
         
         self.soup = BeautifulSoup(self.raw_html, 'html.parser')
         extracted = trafilatura.extract(self.raw_html)
         self.clean_text = extracted if extracted else self.soup.get_text(separator=' ', strip=True)
 
-    def parse_currency(self, text: str) -> Optional[int]:
-        matches = re.findall(r'\$\s*([\d,]+)', text)
-        if matches:
-            try:
-                amounts = [int(m.replace(',', '')) for m in matches]
-                return max(amounts)
-            except: pass
-        return None
+    def extract_award_range(self) -> str:
+        # Improved currency range detection
+        matches = re.findall(r'\$\s*([\d,]+)', self.clean_text)
+        if len(matches) >= 2:
+            return f"${matches[0]} to ${matches[-1]}"
+        elif len(matches) == 1:
+            return f"Up to ${matches[0]}"
+        return "Not available"
 
     def extract_fields(self) -> dict:
-        title = "Unknown FOA Title"
-        title_tag = self.soup.find('title')
-        if title_tag:
-            title = title_tag.text.strip()
+        title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
         
+        # ID extraction matching both NSF and NIH patterns
         foa_id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.clean_text)
-        foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-{int(datetime.now().timestamp())}"
+        foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-INGEST-{int(datetime.now().timestamp())}"
         
         agency = "US Government Agency"
         if "nsf.gov" in self.url.lower():
-            agency = "National Science Foundation"
+            agency = "National Science Foundation (NSF)"
         elif "grants.gov" in self.url.lower():
-            agency = "Grants.gov (Federal)"
+            agency = "Grants.gov / Federal Portal"
 
         date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.clean_text)
-        open_date = date_matches[0] if len(date_matches) > 0 else None
-        close_date = date_matches[-1] if len(date_matches) > 1 else None
         
         def to_iso(d_str):
             if not d_str: return None
@@ -95,21 +90,21 @@ class ExtractionEngine:
                 return datetime.strptime(d_str, "%B %d, %Y").strftime("%Y-%m-%d")
             except: return None
 
-        eligibility = "Not specified"
+        # Eligibility extraction (Requested Field)
+        eligibility = "Not explicitly defined in snippet."
         elig_idx = self.clean_text.lower().find("eligibility")
         if elig_idx != -1:
-            eligibility = self.clean_text[elig_idx:elig_idx+500].strip()
+            eligibility = self.clean_text[elig_idx:elig_idx+500].replace('\n', ' ').strip()
         
         return {
             "foa_id": foa_id,
             "title": title,
             "agency": agency,
-            "open_date": to_iso(open_date),
-            "close_date": to_iso(close_date),
+            "open_date": to_iso(date_matches[0]) if len(date_matches) > 0 else None,
+            "close_date": to_iso(date_matches[-1]) if len(date_matches) > 1 else None,
             "eligibility": eligibility,
-            "program_description": self.clean_text[:3000],
-            "award_ceiling": self.parse_currency(self.clean_text),
-            "award_floor": None,
+            "program_description": self.clean_text[:2500].strip(),
+            "award_range": self.extract_award_range(),
             "source_url": self.url,
         }
 
@@ -119,32 +114,39 @@ class SemanticTagger:
         with open(ontology_path, 'r') as f:
             self.ontology = json.load(f)
 
-    def score_text(self, text: str) -> Dict[str, float]:
+    def group_tags(self, text: str) -> Dict[str, List[str]]:
         text_lower = text.lower()
+        grouped = {cat: [] for cat in self.ontology.keys()}
         scores = {}
+        
         for category, tags in self.ontology.items():
             for tag_name, tag_data in tags.items():
                 hits = sum(1 for kw in tag_data['keywords'] if kw in text_lower)
                 if hits > 0:
-                    base_score = min(1.0, (hits * 0.3)) * tag_data['weight']
-                    scores[tag_name] = round(base_score, 3)
-        return scores
+                    grouped[category].append(tag_name)
+                    scores[tag_name] = round(min(1.0, (hits * 0.3)) * tag_data['weight'], 3)
+        
+        return grouped, scores
 
+# --- Orchestrator ---
 def main():
-    parser = argparse.ArgumentParser(description="FOA Ingestion Pipeline")
-    parser.add_argument("--url", required=True, help="URL of the FOA to ingest")
-    parser.add_argument("--out_dir", required=True, help="Output directory")
+    parser = argparse.ArgumentParser(description="GSoC Screening Task: FOA Ingestion Pipeline")
+    parser.add_argument("--url", required=True, help="URL of the FOA Announcement")
+    parser.add_argument("--out_dir", required=True, help="Target output directory")
     args = parser.parse_args()
 
+    console.print(f"\n[bold blue][*] Running Evaluation Pipeline for:[/bold blue] {args.url}")
+    
     engine = ExtractionEngine(args.url)
     engine.fetch()
     raw_fields = engine.extract_fields()
     
     tagger = SemanticTagger()
-    tag_scores = tagger.score_text(engine.clean_text)
+    grouped_tags, tag_scores = tagger.group_tags(engine.clean_text)
+    raw_fields["tags"] = grouped_tags
     raw_fields["tag_scores"] = tag_scores
-    raw_fields["tags"] = list(tag_scores.keys())
 
+    # Build Pydantic model for strict compliance validation
     record = FOARecord(**raw_fields)
     response = FOAResponse(data=record)
 
@@ -156,20 +158,37 @@ def main():
         json.dump(response.model_dump(), f, indent=4)
         
     with open(csv_path, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=record.model_dump().keys())
+        # Flatten dictionary for CSV format
+        writer = csv.DictWriter(f, fieldnames=[f for f in record.model_dump().keys() if f != "tags"] + ["tags_metadata"])
         writer.writeheader()
+        
         csv_data = record.model_dump()
-        csv_data['tags'] = "|".join(csv_data['tags'])
+        # Clean up CSV formatting for list fields
+        tags_flat = []
+        for cat, tag_list in csv_data['tags'].items():
+            tags_flat.extend(tag_list)
+        
+        csv_data['tags_metadata'] = "|".join(tags_flat)
+        del csv_data['tags']
         csv_data['tag_scores'] = json.dumps(csv_data['tag_scores'])
         writer.writerow(csv_data)
 
-    table = Table(title=f"FOA Extraction Summary: {record.foa_id}", show_header=True, header_style="bold green")
-    table.add_column("Field", style="cyan", width=20)
-    table.add_column("Value", style="white")
-    table.add_row("Title", record.title[:70] + "...")
+    # --- CLI Report (Showing Categorized Semantic Tags) ---
+    table = Table(title=f"FOA Extraction Summary: {record.foa_id}", show_header=True, header_style="bold cyan")
+    table.add_column("Field", style="dim", width=20)
+    table.add_column("Extracted Data", style="bold white")
+    
     table.add_row("Agency", record.agency)
-    table.add_row("Tags", ", ".join(record.tags[:5]))
+    table.add_row("Title", record.title[:80] + "...")
+    table.add_row("Award Range", record.award_range)
+    
+    for category, tags in record.tags.items():
+        if tags:
+            cat_name = category.replace("_", " ").title()
+            table.add_row(cat_name, ", ".join(tags), end_section=True)
+
     console.print(table)
+    console.print(Panel(f"✅ Submission Ready: Exported [green]foa.json[/green] and [green]foa.csv[/green] to {args.out_dir}"))
 
 if __name__ == "__main__":
     main()
