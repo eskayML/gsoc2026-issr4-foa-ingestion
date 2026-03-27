@@ -65,22 +65,32 @@ class ExtractionEngine:
         Extracts a clean range (Lower - Upper) from the funding section.
         """
         # Focus on the 'Award Information' section to avoid intro noise
-        award_section = re.search(r'(?i)(Award Information|Anticipated Funding Amount).*?(\n\n|\n[A-Z][a-z]+ [A-Z]|$)', self.clean_text, re.DOTALL)
+        # This anchor is safer for dynamic extraction than full document scans
+        award_section = re.search(r'(?i)(Award Information|Anticipated Funding Amount|Award Size).*?(\n\n|\n[A-Z][a-z]+ [A-Z]|$)', self.clean_text, re.DOTALL)
         text_to_scan = award_section.group(0) if award_section else self.clean_text
         
-        matches = re.findall(r'\$\s*([\d,]+)', text_to_scan)
+        # Regex for currency with commas and decimals
+        matches = re.findall(r'\$\s*([\d,]+(?:\.\d{2})?)', text_to_scan)
         if matches:
             try:
-                vals = [int(m.replace(',', '')) for m in matches]
-                if len(vals) >= 2:
-                    return f"${min(vals):,} - ${max(vals):,}"
-                return f"Up to ${vals[0]:,}"
+                # Convert string currency to integers for comparison
+                vals = [int(re.sub(r'[,.]', '', m)) for m in matches]
+                # Filter out outliers (like years or small counts) by checking for high value
+                significant_vals = [v for v in vals if v > 1000]
+                
+                if not significant_vals:
+                    significant_vals = vals # Fallback
+
+                if len(significant_vals) >= 2:
+                    return f"${min(significant_vals):,} - ${max(significant_vals):,}"
+                return f"Up to ${significant_vals[0]:,}"
             except: pass
         return "Not specified"
 
     def extract_fields(self) -> dict:
         title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
         
+        # ID extraction matching NSF/NIH/Standard patterns
         foa_id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.clean_text)
         foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-INGEST-{int(datetime.now().timestamp())}"
         
@@ -90,6 +100,7 @@ class ExtractionEngine:
         elif "grants.gov" in self.url.lower():
             agency = "Grants.gov / Federal"
 
+        # Regex for common US Date formats in government docs
         date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.clean_text)
         
         def to_iso(d_str):
