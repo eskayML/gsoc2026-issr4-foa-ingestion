@@ -1,17 +1,27 @@
-[
-    {
-        "foa_id": "NSF 23-561",
+{
+    "metadata": {
+        "generated_at": "2026-03-27T15:02:02.660727Z",
+        "schema_version": "1.1.0",
+        "extractor_engine": "ISSR4-Primary"
+    },
+    "data": {
+        "foa_id": "NSF23-561",
         "title": "NSF 23-561: Computer and Information Science and Engineering Core Programs",
-        "agency": "National Science Foundation (NSF)",
+        "agency": "National Science Foundation",
         "open_date": "2024-01-15",
         "close_date": "2024-10-23",
-        "eligibility": "Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems....",
-        "program_description": "NSF 23-561: Computer and Information Science and Engineering Core Programs Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems.",
-        "award_range": "Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems....",
+        "eligibility": "Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems. Maximum award is $500,000....",
+        "description": "Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems. Maximum award is $500,000.",
+        "award_ceiling": 100000000,
+        "award_floor": null,
         "source_url": "https://www.nsf.gov/pubs/2023/nsf23561/nsf23561.htm",
         "tags": [
-            "Computer Science",
-            "AI/ML"
-        ]
+            "artificial_intelligence",
+            "computer_systems"
+        ],
+        "tag_scores": {
+            "artificial_intelligence": 0.6,
+            "computer_systems": 0.24
+        }
     }
-]
+}
