@@ -18,8 +18,8 @@ console = Console()
 # --- Pydantic Schema Definition ---
 class FOAMetadata(BaseModel):
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-    schema_version: str = "1.8.0"
-    extractor_engine: str = "ISSR4-Context-Aware-Engine"
+    schema_version: str = "2.0.0"
+    extractor_engine: str = "ISSR4-Modular-Provider-System"
 
 class FOARecord(BaseModel):
     foa_id: str
@@ -38,16 +38,51 @@ class FOAResponse(BaseModel):
     metadata: FOAMetadata = Field(default_factory=FOAMetadata)
     data: FOARecord
 
-# --- Extraction Engine ---
+# --- Modular Provider Architecture ---
+
+class BaseExtractor:
+    """Interface for portal-specific extraction logic"""
+    def extract(self, html: str, clean_text: str) -> dict:
+        raise NotImplementedError
+
+class NSFExtractor(BaseExtractor):
+    def extract(self, html: str, clean_text: str) -> dict:
+        # NSF specific anchors
+        desc_match = re.search(r'(?i)(Synopsis of Program|Program Description)[:\s]+(.*?)(?=\nIII\.|\nAward Information|$)', clean_text, re.DOTALL)
+        description = desc_match.group(2).strip() if desc_match else clean_text
+        
+        elig_match = re.search(r'(?i)Who May Submit Proposals:(.*?)(?=Who May Serve as PI|V\. Proposal|$)', clean_text, re.DOTALL)
+        eligibility = elig_match.group(1).strip() if elig_match else "Refer to NSF solicitation text."
+        
+        return {
+            "agency": "National Science Foundation (NSF)",
+            "description": description,
+            "eligibility": eligibility
+        }
+
+class GrantsGovExtractor(BaseExtractor):
+    def extract(self, html: str, clean_text: str) -> dict:
+        # Grants.gov specific patterns (often NIH/DOE/etc)
+        return {
+            "agency": "Grants.gov Portal (Federal)",
+            "description": clean_text,
+            "eligibility": "Refer to Grants.gov opportunity details."
+        }
+
 class ExtractionEngine:
     def __init__(self, url: str):
         self.url = url
         self.raw_html = ""
         self.clean_text = ""
         self.soup = None
+        # Dynamic Provider Selection
+        if "nsf.gov" in url.lower():
+            self.provider = NSFExtractor()
+        else:
+            self.provider = GrantsGovExtractor()
 
     def fetch(self):
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         try:
             response = requests.get(self.url, headers=headers, timeout=15)
             response.raise_for_status()
@@ -57,77 +92,46 @@ class ExtractionEngine:
             raise
         
         self.soup = BeautifulSoup(self.raw_html, 'html.parser')
-        extracted = trafilatura.extract(self.raw_html, include_tables=True, include_links=False)
+        extracted = trafilatura.extract(self.raw_html, include_tables=True)
         self.clean_text = extracted if extracted else self.soup.get_text(separator='\n', strip=True)
 
-    def sanitize_string(self, text: str) -> str:
-        """
-        Removes characters that break JSON/CSV: control characters, 
-        excessive backslashes, and normalizes whitespaces.
-        """
+    def sanitize(self, text: str) -> str:
         if not text: return ""
-        # Remove control characters (non-printable)
         text = "".join(ch for ch in text if ch.isprintable() or ch in "\n\t")
-        # Normalize whitespace and remove common breaking escape chars
-        text = text.replace('\\', '/').replace('"', "'")
-        return " ".join(text.split())
-
-    def extract_award_range(self) -> str:
-        text_lower = self.clean_text.lower()
-        search_areas = ["award information", "anticipated funding", "award size"]
-        extracted_nums = []
-        for anchor in search_areas:
-            idx = text_lower.find(anchor)
-            if idx != -1:
-                window = self.clean_text[idx:idx+2500]
-                matches = re.findall(r'\$\s*([\d,]+)', window)
-                for m in matches:
-                    try:
-                        val = int(re.sub(r'[,.]', '', m))
-                        if val > 1000: extracted_nums.append(val)
-                    except: pass
-        if extracted_nums:
-            unique_vals = sorted(list(set(extracted_nums)))
-            if len(unique_vals) >= 2:
-                return f"${unique_vals[0]:,} - ${unique_vals[-1]:,}"
-            return f"Up to ${unique_vals[0]:,}"
-        return "Not specified"
+        return " ".join(text.replace('\\', '/').replace('"', "'").split())
 
     def extract_fields(self) -> dict:
+        # Common Extraction Logic
         title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
         foa_id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.clean_text)
-        foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-INGEST-{int(datetime.now().timestamp())}"
+        foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-{int(datetime.now().timestamp())}"
         
-        agency = "US Government Agency"
-        if "nsf.gov" in self.url.lower(): agency = "National Science Foundation (NSF)"
-        elif "grants.gov" in self.url.lower(): agency = "Grants.gov / Federal"
-
         date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.clean_text)
         
         def to_iso(d_str):
-            if not d_str: return None
             try: return datetime.strptime(d_str, "%B %d, %Y").strftime("%Y-%m-%d")
             except: return None
 
-        # Eligibility Section Capture
-        eligibility = "Refer to source URL."
-        elig_match = re.search(r'(?i)Who May Submit Proposals:(.*?)(?=Who May Serve as PI|V\. Proposal|$)', self.clean_text, re.DOTALL)
-        if elig_match: eligibility = elig_match.group(1).strip()
+        # Provider-Specific logic
+        p_data = self.provider.extract(self.raw_html, self.clean_text)
         
-        # Synopsis Capture
-        description = self.clean_text
-        desc_match = re.search(r'(?i)(Synopsis of Program|Program Description)[:\s]+(.*?)(?=\nIII\.|\nAward Information|$)', self.clean_text, re.DOTALL)
-        if desc_match: description = desc_match.group(2).strip()
+        # Award Range Logic (Shared)
+        matches = re.findall(r'\$\s*([\d,]+)', self.clean_text)
+        award_str = "Not specified"
+        if matches:
+            vals = [int(re.sub(r'[,.]', '', m)) for m in matches if int(re.sub(r'[,.]', '', m)) > 1000]
+            if len(vals) >= 2: award_str = f"${min(vals):,} - ${max(vals):,}"
+            elif vals: award_str = f"Up to ${vals[0]:,}"
 
         return {
             "foa_id": foa_id,
-            "title": self.sanitize_string(title),
-            "agency": agency,
+            "title": self.sanitize(title),
+            "agency": p_data["agency"],
             "open_date": to_iso(date_matches[0]) if len(date_matches) > 0 else None,
             "close_date": to_iso(date_matches[-1]) if len(date_matches) > 1 else None,
-            "eligibility": self.sanitize_string(eligibility)[:2000],
-            "program_description": self.sanitize_string(description),
-            "award_range": self.extract_award_range(),
+            "eligibility": self.sanitize(p_data["eligibility"])[:2000],
+            "program_description": self.sanitize(p_data["description"]),
+            "award_range": award_str,
             "source_url": self.url,
         }
 
@@ -148,17 +152,15 @@ class SemanticTagger:
                     grouped[category].append(tag_name)
                     raw_scores[tag_name] = (hits * 0.3) * tag_data['weight']
         
-        # --- Normalizing Scores to add up to 1.0 (Probabilistic Distribution) ---
         total_raw = sum(raw_scores.values())
         final_scores = {}
         if total_raw > 0:
             for tag, score in raw_scores.items():
                 final_scores[tag] = round(score / total_raw, 4)
-        
         return grouped, final_scores
 
 def main():
-    parser = argparse.ArgumentParser(description="FOA Ingestion Pipeline (ISSR4)")
+    parser = argparse.ArgumentParser(description="Modular FOA Ingestion Engine")
     parser.add_argument("--url", required=True)
     parser.add_argument("--out_dir", required=True)
     args = parser.parse_args()
@@ -191,8 +193,9 @@ def main():
 
     table = Table(title=f"Extraction Success: {record.foa_id}", show_header=True, header_style="bold green")
     table.add_column("Field", style="cyan"); table.add_column("Value", style="white")
+    table.add_row("Provider", engine.provider.__class__.__name__)
     table.add_row("Agency", record.agency)
-    table.add_row("Score Sum", f"{sum(record.tag_scores.values()):.2f}")
+    table.add_row("Award", record.award_range)
     console.print(table)
 
 if __name__ == "__main__":
