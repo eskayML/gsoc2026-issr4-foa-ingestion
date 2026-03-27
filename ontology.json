@@ -1,0 +1,11 @@
+{
+  "research_domains": {
+    "artificial_intelligence": {"keywords": ["machine learning", "artificial intelligence", "deep learning", "neural network", "generative ai"], "weight": 1.0},
+    "computer_systems": {"keywords": ["infrastructure", "computing", "software engineering", "cybersecurity", "systems"], "weight": 0.8},
+    "health_sciences": {"keywords": ["clinical", "healthcare", "biology", "proteomics", "genomics", "medical"], "weight": 1.0}
+  },
+  "grant_types": {
+    "center_grant": {"keywords": ["center", "institute", "hub"], "weight": 0.9},
+    "training_grant": {"keywords": ["fellowship", "training", "students", "curriculum"], "weight": 0.9}
+  }
+}
