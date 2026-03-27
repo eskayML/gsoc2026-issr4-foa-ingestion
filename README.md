@@ -8,6 +8,9 @@ Research teams waste hours manually parsing government funding portals. FOAs are
 ## The Solution
 This repo has the screening task for the FOA Ingestion and Semantic Tagging pipeline. This is not just a basic script but a solid foundation for a real intelligence engine. It automates FOA ingestion from Grants.gov and NSF. It cleans the raw HTML into strict schemas and applies a weighted semantic tagging system so grants can be matched easily.
 
+> [!WARNING]
+> This implementation focuses primarily on the NSF portal for the sake of this evaluation. For the full project, I plan to scale this architecture to support NIH, DOE, and other major funding platforms using our modular provider system.
+
 ## System Architecture
 
 ```mermaid
