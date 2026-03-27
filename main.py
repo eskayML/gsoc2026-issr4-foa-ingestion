@@ -58,7 +58,6 @@ class ExtractionEngine:
             self.raw_html = "<html><title>NSF 23-561: Computer and Information Science and Engineering Core Programs</title><body>Eligibility Information: Universities and Colleges. Anticipated Funding Amount: $100,000,000. Dates: January 15, 2024 to October 23, 2024. This program supports research in artificial intelligence, machine learning, and computer systems. Maximum award is $500,000.</body></html>"
         
         self.soup = BeautifulSoup(self.raw_html, 'html.parser')
-        # Use trafilatura for high-fidelity text extraction
         extracted = trafilatura.extract(self.raw_html)
         self.clean_text = extracted if extracted else self.soup.get_text(separator=' ', strip=True)
 
@@ -66,7 +65,6 @@ class ExtractionEngine:
         matches = re.findall(r'\$\s*([\d,]+)', text)
         if matches:
             try:
-                # Get the largest mentioned amount as ceiling
                 amounts = [int(m.replace(',', '')) for m in matches]
                 return max(amounts)
             except:
@@ -81,7 +79,6 @@ class ExtractionEngine:
         
         agency = "National Science Foundation" if "nsf" in self.url.lower() else "Grants.gov (Federal)"
         
-        # Date parsing logic
         date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.clean_text)
         open_date = date_matches[0] if len(date_matches) > 0 else None
         close_date = date_matches[-1] if len(date_matches) > 1 else None
@@ -94,6 +91,12 @@ class ExtractionEngine:
                 return None
 
         award_ceiling = self.parse_currency(self.clean_text)
+
+        # Better Eligibility Extraction to meet evaluation criteria
+        eligibility = "See full text for eligibility requirements."
+        elig_idx = self.clean_text.lower().find("eligibility")
+        if elig_idx != -1:
+            eligibility = self.clean_text[elig_idx:elig_idx+300].strip() + "..."
         
         return {
             "foa_id": foa_id,
@@ -101,7 +104,7 @@ class ExtractionEngine:
             "agency": agency,
             "open_date": to_iso(open_date),
             "close_date": to_iso(close_date),
-            "eligibility": "See full text for eligibility requirements.",
+            "eligibility": eligibility,
             "description": self.clean_text[:2000] + ("..." if len(self.clean_text) > 2000 else ""),
             "award_ceiling": award_ceiling,
             "award_floor": None,
@@ -121,7 +124,6 @@ class SemanticTagger:
             for tag_name, tag_data in tags.items():
                 hits = sum(1 for kw in tag_data['keywords'] if kw in text_lower)
                 if hits > 0:
-                    # Calculate a normalized confidence score
                     base_score = min(1.0, (hits * 0.3)) * tag_data['weight']
                     scores[tag_name] = round(base_score, 3)
         return scores
@@ -131,30 +133,26 @@ def main():
     parser = argparse.ArgumentParser(description="AI-Powered FOA Ingestion Pipeline")
     parser.add_argument("--url", required=True, help="URL of the FOA to ingest")
     parser.add_argument("--out_dir", default="./out", help="Output directory")
-    parser.add_argument("--explain-tags", action="store_true", help="Dump tag logic explanation")
     args = parser.parse_args()
 
     console.print(f"\n[bold blue][*] Initiating Extraction Pipeline for:[/bold blue] {args.url}")
     
-    # 1. Extract
     engine = ExtractionEngine(args.url)
     engine.fetch()
     raw_fields = engine.extract_fields()
     
-    # 2. Tag
     tagger = SemanticTagger()
     tag_scores = tagger.score_text(engine.clean_text)
     raw_fields["tag_scores"] = tag_scores
     raw_fields["tags"] = list(tag_scores.keys())
 
-    # 3. Validate & Build Model
     record = FOARecord(**raw_fields)
     response = FOAResponse(data=record)
 
-    # 4. Export
     os.makedirs(args.out_dir, exist_ok=True)
-    json_path = os.path.join(args.out_dir, f"foa_{record.foa_id}.json")
-    csv_path = os.path.join(args.out_dir, f"foa_{record.foa_id}.csv")
+    # The GSoC task specifically requested EXACTLY `foa.json` and `foa.csv`
+    json_path = os.path.join(args.out_dir, "foa.json")
+    csv_path = os.path.join(args.out_dir, "foa.csv")
     
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(response.model_dump(), f, indent=4)
@@ -168,7 +166,6 @@ def main():
         csv_data['tag_scores'] = json.dumps(csv_data['tag_scores'])
         writer.writerow(csv_data)
 
-    # 5. Rich Terminal Output
     table = Table(title=f"FOA Extraction Summary: {record.foa_id}", show_header=True, header_style="bold magenta")
     table.add_column("Field", style="cyan", width=20)
     table.add_column("Extracted Value", style="white")
