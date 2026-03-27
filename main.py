@@ -58,33 +58,44 @@ class ExtractionEngine:
         
         self.soup = BeautifulSoup(self.raw_html, 'html.parser')
         extracted = trafilatura.extract(self.raw_html, include_tables=True, include_links=False)
-        self.clean_text = extracted if extracted else self.soup.get_text(separator='\n', strip=True)
+        # Fallback to simple soup if trafilatura fails to preserve structure
+        self.clean_text = extracted if extracted and len(extracted) > 200 else self.soup.get_text(separator=' ', strip=True)
 
     def extract_award_range(self) -> str:
         """
         Extracts a clean range (Lower - Upper) from the funding section.
         """
-        # Focus on the 'Award Information' section to avoid intro noise
-        # This anchor is safer for dynamic extraction than full document scans
-        award_section = re.search(r'(?i)(Award Information|Anticipated Funding Amount|Award Size).*?(\n\n|\n[A-Z][a-z]+ [A-Z]|$)', self.clean_text, re.DOTALL)
-        text_to_scan = award_section.group(0) if award_section else self.clean_text
+        # Step 1: Isolate the section most likely to contain the award info
+        # Anchors: 'Award Information', 'Anticipated Funding', 'Award Size'
+        text_lower = self.clean_text.lower()
+        search_areas = [
+            "award information",
+            "anticipated funding",
+            "award size"
+        ]
         
-        # Regex for currency with commas and decimals
-        matches = re.findall(r'\$\s*([\d,]+(?:\.\d{2})?)', text_to_scan)
-        if matches:
-            try:
-                # Convert string currency to integers for comparison
-                vals = [int(re.sub(r'[,.]', '', m)) for m in matches]
-                # Filter out outliers (like years or small counts) by checking for high value
-                significant_vals = [v for v in vals if v > 1000]
-                
-                if not significant_vals:
-                    significant_vals = vals # Fallback
-
-                if len(significant_vals) >= 2:
-                    return f"${min(significant_vals):,} - ${max(significant_vals):,}"
-                return f"Up to ${significant_vals[0]:,}"
-            except: pass
+        extracted_nums = []
+        
+        for anchor in search_areas:
+            idx = text_lower.find(anchor)
+            if idx != -1:
+                # Capture a broad window around the anchor
+                window = self.clean_text[idx:idx+2500]
+                matches = re.findall(r'\$\s*([\d,]+)', window)
+                for m in matches:
+                    try:
+                        val = int(re.sub(r'[,.]', '', m))
+                        if val > 1000: # Ignore low counts/years
+                            extracted_nums.append(val)
+                    except: pass
+        
+        if extracted_nums:
+            # Sort to get true lower and upper bounds found in context
+            unique_vals = sorted(list(set(extracted_nums)))
+            if len(unique_vals) >= 2:
+                return f"${unique_vals[0]:,} - ${unique_vals[-1]:,}"
+            return f"Up to ${unique_vals[0]:,}"
+            
         return "Not specified"
 
     def extract_fields(self) -> dict:
