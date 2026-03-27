@@ -1,9 +1,10 @@
 # GSoC 2026: AI-Powered Funding Intelligence (ISSR4)
-**Applicant:** Samuel Kalu  
-**Role:** Senior ML Engineer
 
-## Overview
-This repository contains a production-grade screening task for the **FOA Ingestion + Semantic Tagging** project. The pipeline automates the ingestion of Funding Opportunity Announcements (FOAs) from Grants.gov and NSF, validates them via strict `Pydantic` schemas, and applies a weighted, ontology-based semantic tagging engine.
+## The Problem
+Research development teams spend hundreds of hours manually parsing government funding portals. Funding Opportunity Announcements (FOAs) are scattered, densely formatted, and notoriously hard to track. We are losing critical time to manual PDF scraping—time that should be spent on actual research and proposal development.
+
+## The Solution
+This repository contains the screening task for the **FOA Ingestion + Semantic Tagging** pipeline. It's not just a script; it's the foundation for a production-grade intelligence engine. It automates the ingestion of FOAs from Grants.gov and the NSF, sanitizes the raw HTML/PDFs into strict schemas, and applies a weighted semantic tagging system so grants can be queried and matched mathematically.
 
 ## System Architecture
 
@@ -14,21 +15,21 @@ graph TD
     C -->|Clean Text| D[SemanticTagger]
     D -->|ontology.json| E[Confidence Scoring]
     E --> F{Pydantic Validation}
-    F -->|Strict Schema| G[(FOA JSON Output)]
-    F -->|Strict Schema| H[(FOA CSV Output)]
+    F -->|Strict Schema| G[(foa.json)]
+    F -->|Strict Schema| H[(foa.csv)]
     
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style G fill:#bbf,stroke:#333,stroke-width:1px
     style H fill:#bbf,stroke:#333,stroke-width:1px
 ```
 
-## Engineering Upgrades vs. Baseline Requirements
-To ensure this pipeline is truly production-ready for an institutional research team, I implemented several advanced features beyond the basic requirements:
+## Engineering Philosophy
+Building for institutional research requires more than just extracting text—it requires absolute reliability. Here is how this pipeline approaches the problem:
 
-1. **Strict Schema Validation (`Pydantic`):** Instead of passing loose dictionaries, all extracted data flows through a strict Pydantic `FOARecord` model. This ensures fields like dates are properly ISO-formatted and currency amounts are typed as integers.
-2. **Weighted Semantic Tagging:** The `SemanticTagger` doesn't just do binary keyword matching. It utilizes an external `ontology.json` to calculate normalized confidence scores (`tag_scores: Dict[str, float]`) based on term frequency and ontology weights, allowing downstream grant matching systems to rank relevance.
-3. **High-Fidelity Text Extraction (`trafilatura`):** Government HTML is notoriously bloated. Instead of raw regex or basic `bs4.get_text()`, the engine uses `trafilatura` to strip boilerplate navbars and footers, extracting only the core programmatic text for highly accurate semantic tagging.
-4. **Rich CLI Orchestration:** Includes `argparse` orchestration with a beautifully formatted terminal UI (`rich`) for extraction summaries.
+1. **Strict Data Contracts (`Pydantic`):** Government endpoints are unpredictable. By forcing all extracted data through a strict Pydantic `FOARecord` model, we guarantee that downstream databases never choke on malformed dates or broken currency strings.
+2. **High-Fidelity Signal (`Trafilatura`):** Standard web scraping pulls in navigation bars, footers, and HTML noise that destroys semantic tagging accuracy. This engine uses `trafilatura` to strip the boilerplate and isolate the true programmatic text of the grant.
+3. **Weighted Semantic Tagging:** Binary keyword matching isn't enough. The `SemanticTagger` loads an external `ontology.json` to calculate normalized confidence scores based on term frequency and ontology weights, allowing future grant-matching algorithms to rank relevance properly.
+4. **Beautiful CLI Orchestration:** Tools should be a joy to use. Built with `argparse` and `rich`, the pipeline provides a clean, colorful terminal UI summarizing the extraction success.
 
 ## Execution Instructions
 
@@ -37,13 +38,13 @@ To ensure this pipeline is truly production-ready for an institutional research 
 pip install -r requirements.txt
 ```
 
-### 2. Run the Ingestion Pipeline
+### 2. Run the Engine
 ```bash
-python main.py --url "https://www.nsf.gov/pubs/2023/nsf23561/nsf23561.htm"
+python main.py --url "https://www.nsf.gov/pubs/2023/nsf23561/nsf23561.htm" --out_dir ./out
 ```
 
-### Output Schema
-The pipeline generates `foa_{ID}.json` and `foa_{ID}.csv` in the `./out` directory.
+### 3. The Output
+The pipeline reliably generates `foa.json` and `foa.csv` in the designated output directory.
 
 **JSON Structure:**
 ```json
