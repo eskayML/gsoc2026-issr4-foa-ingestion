@@ -1,10 +1,10 @@
 # GSoC 2026: AI-Powered Funding Intelligence (ISSR4)
 
 ## The Problem
-Research development teams spend hundreds of hours manually parsing government funding portals. Funding Opportunity Announcements (FOAs) are scattered, densely formatted, and notoriously hard to track. We are losing critical time to manual PDF scraping—time that should be spent on actual research and proposal development.
+Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place and hard to track. We lose critical time to manual scraping. That time should go to actual research and proposal writing.
 
 ## The Solution
-This repository contains the screening task for the **FOA Ingestion + Semantic Tagging** pipeline. It's not just a script; it's the foundation for a production-grade intelligence engine. It automates the ingestion of FOAs from Grants.gov and the NSF, sanitizes the raw HTML/PDFs into strict schemas, and applies a weighted semantic tagging system so grants can be queried and matched mathematically.
+This repo has the screening task for the FOA Ingestion and Semantic Tagging pipeline. This is not just a basic script but a solid foundation for a real intelligence engine. It automates FOA ingestion from Grants.gov and NSF. It cleans the raw HTML into strict schemas and applies a weighted semantic tagging system so grants can be matched easily.
 
 ## System Architecture
 
@@ -24,12 +24,12 @@ graph TD
 ```
 
 ## Engineering Philosophy
-Building for institutional research requires more than just extracting text—it requires absolute reliability. Here is how this pipeline approaches the problem:
+Building for research needs more than just pulling text. It needs reliability. Here is how this pipeline works:
 
-1. **Strict Data Contracts (`Pydantic`):** Government endpoints are unpredictable. By forcing all extracted data through a strict Pydantic `FOARecord` model, we guarantee that downstream databases never choke on malformed dates or broken currency strings.
-2. **High-Fidelity Signal (`Trafilatura`):** Standard web scraping pulls in navigation bars, footers, and HTML noise that destroys semantic tagging accuracy. This engine uses `trafilatura` to strip the boilerplate and isolate the true programmatic text of the grant.
-3. **Weighted Semantic Tagging:** Binary keyword matching isn't enough. The `SemanticTagger` loads an external `ontology.json` to calculate normalized confidence scores based on term frequency and ontology weights, allowing future grant-matching algorithms to rank relevance properly.
-4. **Beautiful CLI Orchestration:** Tools should be a joy to use. Built with `argparse` and `rich`, the pipeline provides a clean, colorful terminal UI summarizing the extraction success.
+1. **Strict Data (Pydantic):** Government sites are messy. By pushing data through a strict Pydantic model we make sure databases don't break on bad dates or weird currency text.
+2. **Clean Signal (Trafilatura):** Normal web scraping pulls in navbars and HTML junk that ruins tagging. This uses trafilatura to strip the noise and keep only the real grant text.
+3. **Weighted Tagging:** Just matching keywords is not enough. The SemanticTagger uses an external ontology.json to calculate confidence scores based on term frequency. This helps future algorithms rank relevance better.
+4. **Clean CLI:** Tools should be nice to use. Built with argparse and rich the pipeline gives a nice colorful terminal UI to summarize the extraction.
 
 ## Execution Instructions
 
@@ -44,7 +44,7 @@ python main.py --url "https://www.nsf.gov/pubs/2023/nsf23561/nsf23561.htm" --out
 ```
 
 ### 3. The Output
-The pipeline reliably generates `foa.json` and `foa.csv` in the designated output directory.
+The pipeline generates foa.json and foa.csv in the output directory.
 
 **JSON Structure:**
 ```json
