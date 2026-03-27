@@ -5,7 +5,7 @@ import argparse
 import requests
 import re
 from datetime import datetime
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
 from bs4 import BeautifulSoup
 import trafilatura
@@ -18,7 +18,7 @@ console = Console()
 # --- Pydantic Schema Definition (Optimized for Database Readiness) ---
 class FOAMetadata(BaseModel):
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-    schema_version: str = "1.6.0"
+    schema_version: str = "1.7.0"
     extractor_engine: str = "ISSR4-Context-Aware-Engine"
 
 class FOARecord(BaseModel):
@@ -29,7 +29,7 @@ class FOARecord(BaseModel):
     close_date: Optional[str] # ISO YYYY-MM-DD
     eligibility: str
     program_description: str # Full high-fidelity text
-    award_range: List[str] # Changed to List for high-fidelity multi-track capture
+    award_range: str # Formatted as "$min - $max" for smooth readability
     source_url: str
     tags: Dict[str, List[str]] # Categorized per ISSR ontology
     tag_scores: Dict[str, float]
@@ -60,26 +60,23 @@ class ExtractionEngine:
         extracted = trafilatura.extract(self.raw_html, include_tables=True, include_links=False)
         self.clean_text = extracted if extracted else self.soup.get_text(separator='\n', strip=True)
 
-    def extract_award_range(self) -> List[str]:
+    def extract_award_range(self) -> str:
         """
-        Context-aware award extraction. Ignores intro fluff and targets specific funding sections.
+        Extracts a clean range (Lower - Upper) from the funding section.
         """
-        ranges = []
-        # Target the 'Award Information' section specifically
+        # Focus on the 'Award Information' section to avoid intro noise
         award_section = re.search(r'(?i)(Award Information|Anticipated Funding Amount).*?(\n\n|\n[A-Z][a-z]+ [A-Z]|$)', self.clean_text, re.DOTALL)
         text_to_scan = award_section.group(0) if award_section else self.clean_text
         
-        # Look for specific Track patterns common in NSF/NIH
-        track_matches = re.findall(r'(Track \d+|maximum|ceiling|range).*?(\$\s*[\d,]+)', text_to_scan, re.IGNORECASE)
-        for label, amount in track_matches:
-            ranges.append(f"{label.strip().title()}: {amount.strip()}")
-            
-        # Global funding amount check
-        funding_total = re.search(r'Anticipated Funding Amount[:\s]+(\$\s*[\d,]+)', text_to_scan, re.IGNORECASE)
-        if funding_total:
-            ranges.append(f"Total Program Budget: {funding_total.group(1)}")
-            
-        return list(set(ranges)) if ranges else ["Refer to full solicitation text."]
+        matches = re.findall(r'\$\s*([\d,]+)', text_to_scan)
+        if matches:
+            try:
+                vals = [int(m.replace(',', '')) for m in matches]
+                if len(vals) >= 2:
+                    return f"${min(vals):,} - ${max(vals):,}"
+                return f"Up to ${vals[0]:,}"
+            except: pass
+        return "Not specified"
 
     def extract_fields(self) -> dict:
         title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
@@ -103,7 +100,6 @@ class ExtractionEngine:
 
         # --- High-Fidelity Eligibility Extraction ---
         eligibility = "Refer to source URL."
-        # Use an anchor-based search for the actual list of eligible entities
         elig_match = re.search(r'(?i)Who May Submit Proposals:(.*?)(?=Who May Serve as PI|V\. Proposal|$)', self.clean_text, re.DOTALL)
         if elig_match:
             eligibility = elig_match.group(1).strip()
@@ -150,7 +146,7 @@ def main():
     parser.add_argument("--out_dir", required=True, help="Target output directory")
     args = parser.parse_args()
 
-    console.print(f"\n[bold blue][*] Running Context-Aware Pipeline for:[/bold blue] {args.url}")
+    console.print(f"\n[bold blue][*] Running Extraction Pipeline for:[/bold blue] {args.url}")
     
     engine = ExtractionEngine(args.url)
     engine.fetch()
@@ -178,14 +174,13 @@ def main():
         tags_flat = [t for sublist in csv_data['tags'].values() for t in sublist]
         csv_data['tags_metadata'] = "|".join(tags_flat)
         del csv_data['tags']
-        csv_data['award_range'] = "; ".join(csv_data['award_range'])
         csv_data['tag_scores'] = json.dumps(csv_data['tag_scores'])
         writer.writerow(csv_data)
 
     table = Table(title=f"Extraction Success: {record.foa_id}", show_header=True, header_style="bold green")
     table.add_column("Field", style="cyan", width=20); table.add_column("Value", style="white")
     table.add_row("Agency", record.agency)
-    table.add_row("Award Ranges", f"{len(record.award_range)} items found")
+    table.add_row("Award Range", record.award_range)
     table.add_row("ISO Dates", f"{record.open_date} to {record.close_date}")
     console.print(table)
     console.print(Panel(f"✅ Data Validated & Saved to: {args.out_dir}"))
