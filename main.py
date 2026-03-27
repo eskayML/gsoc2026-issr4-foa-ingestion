@@ -15,11 +15,11 @@ from rich.table import Table
 
 console = Console()
 
-# --- Pydantic Schema Definition ---
+# --- Pydantic Schema Definition (V2.1.0 Unified Schema) ---
 class FOAMetadata(BaseModel):
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-    schema_version: str = "2.0.0"
-    extractor_engine: str = "ISSR4-Modular-Provider-System"
+    schema_version: str = "2.1.0"
+    extractor_engine: str = "ISSR4-Unified-Provider-System"
 
 class FOARecord(BaseModel):
     foa_id: str
@@ -29,7 +29,10 @@ class FOARecord(BaseModel):
     close_date: Optional[str]
     eligibility: str
     program_description: str
-    award_range: str
+    # --- Unified Award Range Schema ---
+    award_min: Optional[int] = None
+    award_max: Optional[int] = None
+    award_range: str # Human readable combined string
     source_url: str
     tags: Dict[str, List[str]]
     tag_scores: Dict[str, float]
@@ -41,19 +44,15 @@ class FOAResponse(BaseModel):
 # --- Modular Provider Architecture ---
 
 class BaseExtractor:
-    """Interface for portal-specific extraction logic"""
     def extract(self, html: str, clean_text: str) -> dict:
         raise NotImplementedError
 
 class NSFExtractor(BaseExtractor):
     def extract(self, html: str, clean_text: str) -> dict:
-        # NSF specific anchors
         desc_match = re.search(r'(?i)(Synopsis of Program|Program Description)[:\s]+(.*?)(?=\nIII\.|\nAward Information|$)', clean_text, re.DOTALL)
         description = desc_match.group(2).strip() if desc_match else clean_text
-        
         elig_match = re.search(r'(?i)Who May Submit Proposals:(.*?)(?=Who May Serve as PI|V\. Proposal|$)', clean_text, re.DOTALL)
         eligibility = elig_match.group(1).strip() if elig_match else "Refer to NSF solicitation text."
-        
         return {
             "agency": "National Science Foundation (NSF)",
             "description": description,
@@ -62,7 +61,6 @@ class NSFExtractor(BaseExtractor):
 
 class GrantsGovExtractor(BaseExtractor):
     def extract(self, html: str, clean_text: str) -> dict:
-        # Grants.gov specific patterns (often NIH/DOE/etc)
         return {
             "agency": "Grants.gov Portal (Federal)",
             "description": clean_text,
@@ -75,7 +73,6 @@ class ExtractionEngine:
         self.raw_html = ""
         self.clean_text = ""
         self.soup = None
-        # Dynamic Provider Selection
         if "nsf.gov" in url.lower():
             self.provider = NSFExtractor()
         else:
@@ -100,8 +97,35 @@ class ExtractionEngine:
         text = "".join(ch for ch in text if ch.isprintable() or ch in "\n\t")
         return " ".join(text.replace('\\', '/').replace('"', "'").split())
 
+    def parse_currency_values(self) -> tuple[Optional[int], Optional[int], str]:
+        """
+        Standardizes Award Min/Max extraction.
+        """
+        text_lower = self.clean_text.lower()
+        search_areas = ["award information", "anticipated funding", "award size", "award max", "award min"]
+        extracted_nums = []
+        
+        for anchor in search_areas:
+            idx = text_lower.find(anchor)
+            if idx != -1:
+                window = self.clean_text[idx:idx+2500]
+                matches = re.findall(r'\$\s*([\d,]+)', window)
+                for m in matches:
+                    try:
+                        val = int(re.sub(r'[,.]', '', m))
+                        if val > 1000: extracted_nums.append(val)
+                    except: pass
+        
+        if extracted_nums:
+            unique_vals = sorted(list(set(extracted_nums)))
+            low = unique_vals[0]
+            high = unique_vals[-1]
+            if len(unique_vals) >= 2:
+                return low, high, f"${low:,} - ${high:,}"
+            return None, low, f"Up to ${low:,}"
+        return None, None, "Not specified"
+
     def extract_fields(self) -> dict:
-        # Common Extraction Logic
         title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
         foa_id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.clean_text)
         foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-{int(datetime.now().timestamp())}"
@@ -112,16 +136,8 @@ class ExtractionEngine:
             try: return datetime.strptime(d_str, "%B %d, %Y").strftime("%Y-%m-%d")
             except: return None
 
-        # Provider-Specific logic
         p_data = self.provider.extract(self.raw_html, self.clean_text)
-        
-        # Award Range Logic (Shared)
-        matches = re.findall(r'\$\s*([\d,]+)', self.clean_text)
-        award_str = "Not specified"
-        if matches:
-            vals = [int(re.sub(r'[,.]', '', m)) for m in matches if int(re.sub(r'[,.]', '', m)) > 1000]
-            if len(vals) >= 2: award_str = f"${min(vals):,} - ${max(vals):,}"
-            elif vals: award_str = f"Up to ${vals[0]:,}"
+        award_min, award_max, award_range = self.parse_currency_values()
 
         return {
             "foa_id": foa_id,
@@ -131,7 +147,9 @@ class ExtractionEngine:
             "close_date": to_iso(date_matches[-1]) if len(date_matches) > 1 else None,
             "eligibility": self.sanitize(p_data["eligibility"])[:2000],
             "program_description": self.sanitize(p_data["description"]),
-            "award_range": award_str,
+            "award_min": award_min,
+            "award_max": award_max,
+            "award_range": award_range,
             "source_url": self.url,
         }
 
@@ -160,7 +178,7 @@ class SemanticTagger:
         return grouped, final_scores
 
 def main():
-    parser = argparse.ArgumentParser(description="Modular FOA Ingestion Engine")
+    parser = argparse.ArgumentParser(description="Unified FOA Ingestion Engine")
     parser.add_argument("--url", required=True)
     parser.add_argument("--out_dir", required=True)
     args = parser.parse_args()
@@ -193,9 +211,10 @@ def main():
 
     table = Table(title=f"Extraction Success: {record.foa_id}", show_header=True, header_style="bold green")
     table.add_column("Field", style="cyan"); table.add_column("Value", style="white")
-    table.add_row("Provider", engine.provider.__class__.__name__)
     table.add_row("Agency", record.agency)
-    table.add_row("Award", record.award_range)
+    table.add_row("Award Min", f"${record.award_min:,}" if record.award_min else "N/A")
+    table.add_row("Award Max", f"${record.award_max:,}" if record.award_max else "N/A")
+    table.add_row("Award Range", record.award_range)
     console.print(table)
 
 if __name__ == "__main__":
