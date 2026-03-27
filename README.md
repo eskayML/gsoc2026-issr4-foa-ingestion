@@ -1,6 +1,6 @@
 # GSoC 2026: AI-Powered Funding Intelligence (ISSR4)
 
-**Test Target:** [NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE)](https://new.nsf.gov/funding/opportunities/pose-pathways-enable-open-source-ecosystems/nsf24-606/solicitation)
+**Test Target:** [NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
 
 ## The Problem
 Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place and hard to track. We lose critical time to manual scraping. That time should go to actual research and proposal writing.
@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ### 2. Run the Engine
 ```bash
-python main.py --url "https://new.nsf.gov/funding/opportunities/pose-pathways-enable-open-source-ecosystems/nsf24-606/solicitation" --out_dir ./out
+python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation" --out_dir ./out
 ```
 
 ### 3. The Output

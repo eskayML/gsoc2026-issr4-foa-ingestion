@@ -1,31 +1,23 @@
 foa_id,title,agency,open_date,close_date,eligibility,description,award_ceiling,award_floor,source_url,tags,tag_scores
-NSF24-606,NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE) | NSF - U.S. National Science Foundation,National Science Foundation,2024-09-13,2021-11-15,"Eligibility Information
-Who May Submit Proposals:
-Proposals may only be submitted by the following:
-- Institutions of Higher Education (IHEs) - Two- and four-year IHEs (including community colleges) accredited in, and having a campus located in the US, acting on behalf of their faculty members. Spec...","NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE)
+NSF26-506,NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE) | NSF - U.S. National Science Foundation,National Science Foundation,2026-02-19,2027-03-02,"Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.
+Proposals must be prepared in accordance with the NSF Propo...","NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)
 Program Solicitation
 Document Information
 Document History
-- Posted: September 13, 2024
-- Replaces: NSF 23-556
-- Replaced by: NSF 26-506
+- Posted: February 19, 2026
+- Replaces: NSF 24-606
 Create a PDF
 To save a PDF of this solicitation, select Print to PDF in your browser's print options.
-Program Solicitation NSF 24-606
+Program Solicitation NSF 26-506
 |
 U.S. National Science Foundation |
 Full Proposal Deadline(s) (due by 5 p.m. submitting organization's local time):
-January 14, 2025
-Second Tuesday in January, Annually Thereafter
-Phase I Proposals
-September 02, 2025
+September 01, 2026
 First Tuesday in September, Annually Thereafter
-Phase I and Phase II Proposals
+March 02, 2027
+First Tuesday in March, Annually Thereafter
 Important Information And Revision Notes
-Any proposal submitted in response to this solicitation should be submitted in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG) that is in effect for the relevant due date to which the proposal is being submitted. The NSF PAPPG is regularly revised and it is the responsibility of the proposer to ensure that the proposal meets the requirements specified in this solicitation and the applicable version of the PAPPG. Submitting a proposal prior to a specified deadline does not negate this requirement.
-Summary Of Program Requirements
-General Information
-Program Title:
-Pathways to Enable Open-Source Ecosystems (POSE)
-Synopsis of Program:
-The Pathways to Enable Open-Source Ecosystems (POSE) program aims to harness the power of open-source development for the creation of new technology solutions to problems of national and societal importance. Many NSF-funded projects result in publicly accessible, modifiable, and distributable open-source products, including software, hardware, models, specifications, programming languages, or data platforms that catalyze further innovation. In some cases, an open-source product that shows potential for wide adoption forms the basis for a self-sustaining open-source ecosystem (OSE) that comprises a leadership team; a managing organization with a well-defi...",27800000,,https://new.nsf.gov/funding/opportunities/pose-pathways-enable-open-source-ecosystems/nsf24-606/solicitation,artificial_intelligence|computer_systems|health_sciences|center_grant|training_grant,"{""artificial_intelligence"": 0.3, ""computer_systems"": 0.72, ""health_sciences"": 0.9, ""center_grant"": 0.27, ""training_grant"": 0.81}"
+Proposers must review the PESOSE website for critical information on proposal and budget preparation.
+Experiential Activities: Each PESOSE Track 1 or Track 2 awardee must participate in mandatory OSE experiential activities, known as ""I-Corps for PESOSE."" The PESOSE website provide information on team composition, expectations for participation and budget information. Track 2 awardees that successfully completed I-Corps for PESOSE as a Track 1 awardee may waive this requirement by indicating the dates of their I-Corps for PESOSE activity on the first line of their Project Description and describing the outcomes of their activities in the body of the Project Description.Collaborations: Although proposals may be multi-organizational, a single organization must serve as the lead and all other organizations as subawardees. Organizations ineligible to submit to this program solicitation may not receive subawards. If ineligible organizations are part of the team; their participation is expected to be supported by non-NSF sources.
+Restricted Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.
+Proposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Us...",40000000,,https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,artificial_intelligence|computer_systems|health_sciences|center_grant|training_grant,"{""artificial_intelligence"": 0.6, ""computer_systems"": 0.8, ""health_sciences"": 0.6, ""center_grant"": 0.27, ""training_grant"": 0.27}"
