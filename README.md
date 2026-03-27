@@ -1,5 +1,7 @@
 # GSoC 2026: AI-Powered Funding Intelligence (ISSR4)
 
+**Test Target:** [NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE)](https://new.nsf.gov/funding/opportunities/pose-pathways-enable-open-source-ecosystems/nsf24-606/solicitation)
+
 ## The Problem
 Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place and hard to track. We lose critical time to manual scraping. That time should go to actual research and proposal writing.
 
