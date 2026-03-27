@@ -2,7 +2,6 @@
 
 **Test Target:** [NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
 
-
 ## The Problem
 Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place and hard to track. We lose critical time to manual scraping. That time should go to actual research and proposal writing.
 
@@ -33,7 +32,7 @@ Building for research needs more than just pulling text. It needs reliability. H
 2. **Clean Signal (Trafilatura):** Normal web scraping pulls in navbars and HTML junk that ruins tagging. This uses trafilatura to strip the noise and keep only the real grant text.
 3. **Multi-Source Handling (Optimized for NSF):** The current ingestion module is optimized for static government portals (like NSF) where content is available in the initial DOM.
 4. **The SPA Roadmap (Grants.gov):** Many portals like Grants.gov are built as Single Page Apps (SPA) that require JavaScript execution. For the full GSoC project I will integrate a headless browser like Playwright to handle these dynamic environments.
-5. **Weighted Tagging:** Just matching keywords is not enough. The SemanticTagger uses an external ontology.json to calculate confidence scores based on term frequency. This helps future algorithms rank relevance better.
+5. **Weighted Tagging:** Just matching keywords is not enough. The SemanticTagger uses an external ontology.json to calculate confidence scores based on term frequency and categories like Research Domains and Sponsor Themes.
 6. **Clean CLI:** Tools should be nice to use. Built with argparse and rich the pipeline gives a nice colorful terminal UI to summarize the extraction.
 
 ## Execution Instructions
@@ -51,20 +50,34 @@ python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-
 ### 3. The Output
 The pipeline generates foa.json and foa.csv in the output directory.
 
-**JSON Structure:**
+**Sample JSON Output:**
 ```json
 {
-  "metadata": {
-    "generated_at": "2026-03-27T10:00:00Z",
-    "schema_version": "1.2.0",
-    "extractor_engine": "ISSR4-MultiSource"
-  },
-  "data": {
-    "foa_id": "NSF26-506",
-    "title": "...",
-    "award_ceiling": 40000000,
-    "tags": ["artificial_intelligence", "computer_systems"],
-    "tag_scores": {"artificial_intelligence": 0.6, "computer_systems": 0.8}
-  }
+    "metadata": {
+        "generated_at": "2026-03-27T16:23:06Z",
+        "schema_version": "1.4.0",
+        "extractor_engine": "ISSR4-NSF-Primary"
+    },
+    "data": {
+        "foa_id": "NSF26-506",
+        "title": "NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)...",
+        "agency": "National Science Foundation (NSF)",
+        "open_date": "2026-02-19",
+        "close_date": "2027-03-02",
+        "eligibility": "Eligibility: The PESOSE solicitation restricts PI eligibility...",
+        "program_description": "NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)...",
+        "award_range": "$300,000 to $1,500,000",
+        "source_url": "https://www.nsf.gov/funding/opportunities/...",
+        "tags": {
+            "research_domains": ["artificial_intelligence", "computer_systems"],
+            "methods_approaches": ["open_source"],
+            "populations": ["educational_institutions"],
+            "sponsor_themes": ["innovation", "security"]
+        },
+        "tag_scores": {
+            "artificial_intelligence": 0.6,
+            "security": 1.0
+        }
+    }
 }
 ```

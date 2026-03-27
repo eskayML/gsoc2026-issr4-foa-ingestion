@@ -1,28 +1,13 @@
 foa_id,title,agency,open_date,close_date,eligibility,program_description,award_range,source_url,tag_scores,tags_metadata
-NSF26-506,NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE) | NSF - U.S. National Science Foundation,National Science Foundation (NSF),2026-02-19,2027-03-02,"Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts. Proposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Use the version of the guide that is in effect on the proposal's due date. Summary Of Program Requirements General Information Program Title: Pathways","NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)
-Program Solicitation
-Document Information
-Document History
-- Posted: February 19, 2026
-- Replaces: NSF 24-606
-Create a PDF
-To save a PDF of this solicitation, select Print to PDF in your browser's print options.
-Program Solicitation NSF 26-506
-|
-U.S. National Science Foundation |
-Full Proposal Deadline(s) (due by 5 p.m. submitting organization's local time):
-September 01, 2026
-First Tuesday in September, Annually Thereafter
-March 02, 2027
-First Tuesday in March, Annually Thereafter
-Important Information And Revision Notes
-Proposers must review the PESOSE website for critical information on proposal and budget preparation.
-Experiential Activities: Each PESOSE Track 1 or Track 2 awardee must participate in mandatory OSE experiential activities, known as ""I-Corps for PESOSE."" The PESOSE website provide information on team composition, expectations for participation and budget information. Track 2 awardees that successfully completed I-Corps for PESOSE as a Track 1 awardee may waive this requirement by indicating the dates of their I-Corps for PESOSE activity on the first line of their Project Description and describing the outcomes of their activities in the body of the Project Description.Collaborations: Although proposals may be multi-organizational, a single organization must serve as the lead and all other organizations as subawardees. Organizations ineligible to submit to this program solicitation may not receive subawards. If ineligible organizations are part of the team; their participation is expected to be supported by non-NSF sources.
-Restricted Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.
-Proposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Use the version of the guide that is in effect on the proposal's due date.
-Summary Of Program Requirements
-General Information
-Program Title:
-Pathways to Enable Secure Open-Source Ecosystems (PESOSE)
-Synopsis of Program:
-The Pathways to Enable Secure Open-Source Ecosystems (PESOSE) program supports the translation of open-source science and engineering-focused research products into safe and sustainable ecosystems that address national and societal challenges. Open-source tools such as software, h","$300,000 to $1,500,000",https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,"{""artificial_intelligence"": 0.6, ""computer_systems"": 0.8, ""health_sciences"": 0.6, ""open_source"": 0.3, ""educational_institutions"": 0.48, ""innovation"": 0.21, ""security"": 1.0}",artificial_intelligence|computer_systems|health_sciences|open_source|educational_institutions|innovation|security
+NSF26-506,NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE) | NSF - U.S. National Science Foundation,National Science Foundation (NSF),2026-02-19,2027-03-02,Who May Submit Proposals:,"of Program:
+The Pathways to Enable Secure Open-Source Ecosystems (PESOSE) program supports the translation of open-source science and engineering-focused research products into safe and sustainable ecosystems that address national and societal challenges. Open-source tools such as software, hardware, machine learning models, languages, and data platforms are designed to be shared as they are publicly-accessible and modifiable. These tools spark innovation in critical fields as varied as artificial intelligence (AI) and cloud computing, banking, healthcare, research, education, next-gen manufacturing, mobility, and National security (including cybersecurity).
+PESOSE supports the creation of managing organizations for these ecosystems, ensuring strong governance, distributed development, and broad user communities across academia, industry, and government. PESOSE also supports enhancements to the safety, security, and privacy of Open-Source Ecosystems (OSE) by addressing significant vulnerabilities, both technical and socio-technical, to improve the resistance of the ecosystem against threats.
+This solicitation seeks three types of proposals, allowing teams to propose specific activities to: 1) scope and plan the establishment of an OSE, 2) establish and expand a sustainable OSE based on a robust, promising open-source product that meets an emergent societal or national need, and 3) improve the safety, security, and privacy of an existing OSE and its products.
+Expanding Participation In Stem, NSF Priorities, And Gold Standard Science
+NSF prioritizes cutting-edge discovery science and engineering research, advancing technology and innovation, and creating opportunities for all Americans. NSF has established priorities set forth by Congress, the administration and the NSF director to promote NSF's mission. Proposers should review the list of NSF priorities and are encouraged to align their proposals with them, where appropriate. NSF also expects the highest standards of scientific rigor, integrity and adherence to appropriate tenets of Gold Standard Science in proposals, as appropriate for the field of science and research modality.
+Cognizant Program Officer(s):
+Please note that the following information is current at the time of publishing. See program website for any updates to the points of contact.
+- PESOSE Program, telephone: (703) 292-8804, email: PESOSE@nsf.gov
+Applicable Catalog of Federal Domestic Assistance (CFDA) Number(s):
+- 47.041 --- Engineering
+","$300,000 to $1,500,000",https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,"{""artificial_intelligence"": 0.6, ""computer_systems"": 0.8, ""health_sciences"": 0.6, ""open_source"": 0.3, ""educational_institutions"": 0.48, ""innovation"": 0.21, ""security"": 1.0}",artificial_intelligence|computer_systems|health_sciences|open_source|educational_institutions|innovation|security
