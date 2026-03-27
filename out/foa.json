@@ -1,8 +1,8 @@
 {
     "metadata": {
-        "generated_at": "2026-03-27T15:20:07.882296Z",
-        "schema_version": "1.1.0",
-        "extractor_engine": "ISSR4-Primary"
+        "generated_at": "2026-03-27T15:43:20.303427Z",
+        "schema_version": "1.2.0",
+        "extractor_engine": "ISSR4-MultiSource"
     },
     "data": {
         "foa_id": "NSF26-506",
@@ -10,8 +10,8 @@
         "agency": "National Science Foundation",
         "open_date": "2026-02-19",
         "close_date": "2027-03-02",
-        "eligibility": "Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.\nProposals must be prepared in accordance with the NSF Propo...",
-        "description": "NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)\nProgram Solicitation\nDocument Information\nDocument History\n- Posted: February 19, 2026\n- Replaces: NSF 24-606\nCreate a PDF\nTo save a PDF of this solicitation, select Print to PDF in your browser's print options.\nProgram Solicitation NSF 26-506\n|\nU.S. National Science Foundation |\nFull Proposal Deadline(s) (due by 5 p.m. submitting organization's local time):\nSeptember 01, 2026\nFirst Tuesday in September, Annually Thereafter\nMarch 02, 2027\nFirst Tuesday in March, Annually Thereafter\nImportant Information And Revision Notes\nProposers must review the PESOSE website for critical information on proposal and budget preparation.\nExperiential Activities: Each PESOSE Track 1 or Track 2 awardee must participate in mandatory OSE experiential activities, known as \"I-Corps for PESOSE.\" The PESOSE website provide information on team composition, expectations for participation and budget information. Track 2 awardees that successfully completed I-Corps for PESOSE as a Track 1 awardee may waive this requirement by indicating the dates of their I-Corps for PESOSE activity on the first line of their Project Description and describing the outcomes of their activities in the body of the Project Description.Collaborations: Although proposals may be multi-organizational, a single organization must serve as the lead and all other organizations as subawardees. Organizations ineligible to submit to this program solicitation may not receive subawards. If ineligible organizations are part of the team; their participation is expected to be supported by non-NSF sources.\nRestricted Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.\nProposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Us...",
+        "eligibility": "Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.\nProposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Use the version of the guide that is in effect on the proposal's due date.\nSummary Of Program Requirements\nGeneral Information\nProgram Title:\nPathways",
+        "program_description": "NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)\nProgram Solicitation\nDocument Information\nDocument History\n- Posted: February 19, 2026\n- Replaces: NSF 24-606\nCreate a PDF\nTo save a PDF of this solicitation, select Print to PDF in your browser's print options.\nProgram Solicitation NSF 26-506\n|\nU.S. National Science Foundation |\nFull Proposal Deadline(s) (due by 5 p.m. submitting organization's local time):\nSeptember 01, 2026\nFirst Tuesday in September, Annually Thereafter\nMarch 02, 2027\nFirst Tuesday in March, Annually Thereafter\nImportant Information And Revision Notes\nProposers must review the PESOSE website for critical information on proposal and budget preparation.\nExperiential Activities: Each PESOSE Track 1 or Track 2 awardee must participate in mandatory OSE experiential activities, known as \"I-Corps for PESOSE.\" The PESOSE website provide information on team composition, expectations for participation and budget information. Track 2 awardees that successfully completed I-Corps for PESOSE as a Track 1 awardee may waive this requirement by indicating the dates of their I-Corps for PESOSE activity on the first line of their Project Description and describing the outcomes of their activities in the body of the Project Description.Collaborations: Although proposals may be multi-organizational, a single organization must serve as the lead and all other organizations as subawardees. Organizations ineligible to submit to this program solicitation may not receive subawards. If ineligible organizations are part of the team; their participation is expected to be supported by non-NSF sources.\nRestricted Eligibility: The PESOSE solicitation restricts PI eligibility dependent on the submitting organization in order to ensure the PIs/Co-PIs have the proper authority, responsibility, continuity and oversight experience to lead the OSE efforts.\nProposals must be prepared in accordance with the NSF Proposal & Award Policies & Procedures Guide (PAPPG). Use the version of the guide that is in effect on the proposal's due date.\nSummary Of Program Requirements\nGeneral Information\nProgram Title:\nPathways to Enable Secure Open-Source Ecosystems (PESOSE)\nSynopsis of Program:\nThe Pathways to Enable Secure Open-Source Ecosystems (PESOSE) program supports the translation of open-source science and engineering-focused research products into safe and sustainable ecosystems that address national and societal challenges. Open-source tools such as software, hardware, machine learning models, languages, and data platforms are designed to be shared as they are publicly-accessible and modifiable. These tools spark innovation in critical fields as varied as artificial intelligence (AI) and cloud computing, banking, healthcare, research, education, next-gen manufacturing, mobility, and National security (including cybersecurity).\nPESOSE supports the creation of managing organizations for these ecosystems, ensuring strong governance, distributed developme",
         "award_ceiling": 40000000,
         "award_floor": null,
         "source_url": "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation",
@@ -19,15 +19,19 @@
             "artificial_intelligence",
             "computer_systems",
             "health_sciences",
-            "center_grant",
-            "training_grant"
+            "open_source",
+            "educational_institutions",
+            "innovation",
+            "security"
         ],
         "tag_scores": {
             "artificial_intelligence": 0.6,
             "computer_systems": 0.8,
             "health_sciences": 0.6,
-            "center_grant": 0.27,
-            "training_grant": 0.27
+            "open_source": 0.3,
+            "educational_institutions": 0.48,
+            "innovation": 0.21,
+            "security": 1.0
         }
     }
 }

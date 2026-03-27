@@ -28,7 +28,7 @@ class FOARecord(BaseModel):
     open_date: Optional[str]
     close_date: Optional[str]
     eligibility: str
-    program_description: str # Renamed to match GSoC spec exactly
+    program_description: str
     award_ceiling: Optional[int] = None
     award_floor: Optional[int] = None
     source_url: str
@@ -48,25 +48,14 @@ class ExtractionEngine:
         self.soup = None
 
     def fetch(self):
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
         try:
-            # Detect Grants.gov vs NSF
-            is_grants_gov = "grants.gov" in self.url.lower()
-            
             response = requests.get(self.url, headers=headers, timeout=15)
             response.raise_for_status()
             self.raw_html = response.text
-            
-            # Special handling: Grants.gov often needs JS, so if we get a tiny response, use fallback
-            if is_grants_gov and len(self.raw_html) < 2000:
-                raise ValueError("Grants.gov SPA detected (Empty DOM). Using high-fidelity fallback.")
-
         except Exception as e:
-            console.print(f"[bold yellow]⚠️ Intelligent Fallback triggered for: {self.url} ({e})[/bold yellow]")
-            if "grants.gov" in self.url.lower():
-                self.raw_html = """<html><title>RFA-AG-25-017: Exploring Proteogenomic Approaches to Unravel Mechanisms</title><body>Agency: National Institutes of Health. Open Date: March 13, 2024. Close Date: June 10, 2024. Eligibility: Higher Education Institutions. Description: This program focuses on genomics, proteomics, and molecular biology to study protein accumulation. Award Ceiling: $500,000.</body></html>"""
-            else:
-                self.raw_html = """<html><title>NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)</title><body>Eligibility: Universities and Colleges. Funding: $40,000,000. Dates: February 19, 2026 to March 02, 2027. Supports secure, trustworthy, and robust open source software.</body></html>"""
+            console.print(f"[bold red]❌ Error: Failed to fetch {self.url} ({e})[/bold red]")
+            raise
         
         self.soup = BeautifulSoup(self.raw_html, 'html.parser')
         extracted = trafilatura.extract(self.raw_html)
@@ -82,14 +71,20 @@ class ExtractionEngine:
         return None
 
     def extract_fields(self) -> dict:
-        title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
+        title = "Unknown FOA Title"
+        title_tag = self.soup.find('title')
+        if title_tag:
+            title = title_tag.text.strip()
         
-        # Robust ID Extraction (Matches NSF 26-506 or RFA-AG-25-017)
-        foa_id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.raw_html)
+        foa_id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.clean_text)
         foa_id = foa_id_match.group(0).replace(' ', '') if foa_id_match else f"FOA-{int(datetime.now().timestamp())}"
         
-        agency = "National Science Foundation" if "nsf" in self.url.lower() else "National Institutes of Health (via Grants.gov)"
-        
+        agency = "US Government Agency"
+        if "nsf.gov" in self.url.lower():
+            agency = "National Science Foundation"
+        elif "grants.gov" in self.url.lower():
+            agency = "Grants.gov (Federal)"
+
         date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.clean_text)
         open_date = date_matches[0] if len(date_matches) > 0 else None
         close_date = date_matches[-1] if len(date_matches) > 1 else None
@@ -100,11 +95,10 @@ class ExtractionEngine:
                 return datetime.strptime(d_str, "%B %d, %Y").strftime("%Y-%m-%d")
             except: return None
 
-        # Better Eligibility Extraction
-        eligibility = "See full text for requirements."
+        eligibility = "Not specified"
         elig_idx = self.clean_text.lower().find("eligibility")
         if elig_idx != -1:
-            eligibility = self.clean_text[elig_idx:elig_idx+300].strip() + "..."
+            eligibility = self.clean_text[elig_idx:elig_idx+500].strip()
         
         return {
             "foa_id": foa_id,
@@ -113,7 +107,7 @@ class ExtractionEngine:
             "open_date": to_iso(open_date),
             "close_date": to_iso(close_date),
             "eligibility": eligibility,
-            "program_description": self.clean_text[:2000] + ("..." if len(self.clean_text) > 2000 else ""),
+            "program_description": self.clean_text[:3000],
             "award_ceiling": self.parse_currency(self.clean_text),
             "award_floor": None,
             "source_url": self.url,
@@ -136,15 +130,12 @@ class SemanticTagger:
                     scores[tag_name] = round(base_score, 3)
         return scores
 
-# --- Orchestrator ---
 def main():
-    parser = argparse.ArgumentParser(description="Multi-Source FOA Ingestion Pipeline")
-    parser.add_argument("--url", required=True, help="URL of the FOA (Grants.gov or NSF)")
-    parser.add_argument("--out_dir", default="./out", help="Output directory")
+    parser = argparse.ArgumentParser(description="FOA Ingestion Pipeline")
+    parser.add_argument("--url", required=True, help="URL of the FOA to ingest")
+    parser.add_argument("--out_dir", required=True, help="Output directory")
     args = parser.parse_args()
 
-    console.print(f"\n[bold blue][*] Multi-Source Pipeline Active for:[/bold blue] {args.url}")
-    
     engine = ExtractionEngine(args.url)
     engine.fetch()
     raw_fields = engine.extract_fields()
@@ -175,12 +166,10 @@ def main():
     table = Table(title=f"FOA Extraction Summary: {record.foa_id}", show_header=True, header_style="bold green")
     table.add_column("Field", style="cyan", width=20)
     table.add_column("Value", style="white")
-    table.add_row("Source Type", "NSF" if "nsf" in args.url.lower() else "Grants.gov")
     table.add_row("Title", record.title[:70] + "...")
-    table.add_row("Award Ceiling", f"${record.award_ceiling:,}" if record.award_ceiling else "N/A")
-    table.add_row("Tags", ", ".join([f"{k}" for k in record.tags[:5]]))
+    table.add_row("Agency", record.agency)
+    table.add_row("Tags", ", ".join(record.tags[:5]))
     console.print(table)
-    console.print(Panel(f"✅ Exported to [blue]{args.out_dir}/foa.json[/blue] and [blue]foa.csv[/blue]"))
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 # GSoC 2026: AI-Powered Funding Intelligence (ISSR4)
 
-**Test Target:** [NSF 24-606: Pathways to Enable Open-Source Ecosystems (POSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
+**Test Target:** [NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
 
 ## The Problem
 Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place and hard to track. We lose critical time to manual scraping. That time should go to actual research and proposal writing.
@@ -53,15 +53,15 @@ The pipeline generates foa.json and foa.csv in the output directory.
 {
   "metadata": {
     "generated_at": "2026-03-27T10:00:00Z",
-    "schema_version": "1.1.0",
-    "extractor_engine": "ISSR4-Primary"
+    "schema_version": "1.2.0",
+    "extractor_engine": "ISSR4-MultiSource"
   },
   "data": {
-    "foa_id": "NSF23-561",
+    "foa_id": "NSF26-506",
     "title": "...",
-    "award_ceiling": 500000,
+    "award_ceiling": 40000000,
     "tags": ["artificial_intelligence", "computer_systems"],
-    "tag_scores": {"artificial_intelligence": 0.6, "computer_systems": 0.24}
+    "tag_scores": {"artificial_intelligence": 0.6, "computer_systems": 0.8}
   }
 }
 ```
