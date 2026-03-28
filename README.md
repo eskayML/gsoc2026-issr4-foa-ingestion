@@ -2,7 +2,7 @@
 
 **Test Targets (Multi-Source Batch):** 
 1. [NSF 26-506 (PESOSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
-2. [Grants.gov (RFA-AG-25-017)](https://www.grants.gov/search-results-detail/352941)
+2. [Grants.gov (Sample 359939)](https://www.grants.gov/search-results-detail/359939)
 
 ## The Problem
 Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place, vary wildly in structure (HTML vs SPA), and are hard to track. We lose critical time to manual scraping that should go to actual research and proposal writing.
@@ -77,12 +77,12 @@ python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-
 
 **Option B: Single URL Evaluation (Grants.gov)**
 ```bash
-python main.py --url "https://www.grants.gov/search-results-detail/352941" --out_dir ./out
+python main.py --url "https://www.grants.gov/search-results-detail/359939" --out_dir ./out
 ```
 
 **Option C: Multi-Source Batch Processing**
 ```bash
-python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,https://www.grants.gov/search-results-detail/352941" --out_dir ./out
+python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,https://www.grants.gov/search-results-detail/359939" --out_dir ./out
 ```
 
 ### 3. The Output
