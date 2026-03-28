@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "generated_at": "2026-03-28T00:55:10.358521Z",
+        "generated_at": "2026-03-28T01:13:35.151395Z",
         "schema_version": "2.4.0",
         "extractor_engine": "ISSR4-Advanced-MultiSource-Engine"
     },
@@ -51,18 +51,22 @@
             "open_date": "2026-02-10",
             "close_date": "2026-06-04",
             "eligibility": "Refer to Section III. Eligibility Information in the NOFO for additional information on eligibility.Foreign Organizations/International CollaborationsNon-domestic (non-U.S.) Entities (Foreign Organizations) are eligible to apply.Non-domestic (non-U.S.) components of U.S. Organizations are eligible to apply.Foreign components, as defined in the NIH Grants Policy Statement, are allowed.NIH will no longer issue awards (i.e., new, renewal, or non-competing continuation) to domestic or foreign entities that involve foreign subawards/subcontracts. All NIH-funded research involving foreign subawards/subcontracts must be submitted in response to a NOFO that is specifically designated for funded international collaborations. This new requirement was effective, May 1, 2025.Applications involving foreign subawards/subcontracts submitted in response to this NOFO will be deemed noncompliant and will not be considered for funding. This policy applies to all monetary international collaborations resulting in foreign subawards/subcontracts, however, it does not preclude unfunded international collaborations or foreign components, funding for foreign consultants, or procurement of unique equipment or supplies from foreign vendors.",
-            "program_description": "The purpose of this notice of funding opportunity (NOFO) is to support the establishment or continuation of longitudinal infant cohorts to determine and compare how initial and repeated natural influenza infections and/or influenza vaccinations shape infant and childhood immunity to future influenza exposures. The goal of this research is to understand how these exposures influence immune responses to subsequent influenza infections and/or vaccines and provide key information to facilitate design of durable, broadly protective influenza vaccines.",
+            "program_description": "The purpose of this notice of funding opportunity (NOFO) is to support the establishment or continuation of longitudinal infant cohorts to determine and compare how initial and repeated natural influenza infections and/or influenza vaccinations shape infant and childhood immunity to future influenza exposures. The goal of this research is to understand how these exposures influence immune responses to subsequent influenza infections and/or vaccines and provide key information to facilitate design of durable, broadly protective influenza vaccines. | The National Institute of Allergy and Infectious Diseases (NIAID) seeks to advance its mission by continuing support toestablish, follow, and characterize longitudinal cohorts of infants and/or mother-infant dyads to determine how influenza infections and/or vaccinations shape infant and childhood immunity. These studies will define and characterize immunity acquired upon initial exposure (including in utero) to influenza antigens from natural infections and/or vaccinations and examine how these exposures influence immune responses to subsequent influenza infections and/or vaccines. Projects that include mother-infant dyads will also study the role of maternal influenza immune status on neonatal responses to influenza infection and/or vaccination. The overall goal of this research is to provide key information to facilitate design of durable, broadly protective influenza vaccines.Grant authorities that allow NIAID to forecast this opportunity are as follows: Sections 301 and 405 of the Public Health Service Act as amended (42 USC 241 and 284) and under Federal Regulations 42 CFR Part 52 and 2 CFR Part 200.",
             "award_min": null,
             "award_max": 3000000,
             "award_range": "Up to $3,000,000",
             "source_url": "https://www.grants.gov/search-results-detail/359939",
             "tags": {
-                "research_domains": [],
+                "research_domains": [
+                    "health_sciences"
+                ],
                 "methods_approaches": [],
                 "populations": [],
                 "sponsor_themes": []
             },
-            "tag_scores": {}
+            "tag_scores": {
+                "health_sciences": 1.0
+            }
         }
     ]
 }

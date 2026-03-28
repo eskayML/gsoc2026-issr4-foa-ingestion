@@ -148,19 +148,35 @@ class GrantsGovProvider(BaseProvider):
         
         data = response.json()
         synopsis = data.get('synopsis', {})
+        forecast = data.get('forecast', {})
 
         title = data.get('opportunityTitle') or "Untitled"
         foa_id = data.get('opportunityNumber') or opp_id
         agency = synopsis.get('agencyName') or "Grants.gov Portal (Federal)"
-        description = synopsis.get('synopsisDesc') or ""
+        
+        # Combine synopsis and forecast descriptions for maximum data density
+        desc_parts = []
+        if synopsis.get('synopsisDesc'):
+            desc_parts.append(synopsis.get('synopsisDesc'))
+        if forecast.get('forecastDesc'):
+            # Forecast often contains rich HTML, parse it clean
+            clean_forecast = BeautifulSoup(forecast.get('forecastDesc'), 'html.parser').get_text(separator=' ', strip=True)
+            desc_parts.append(clean_forecast)
+            
+        description = " | ".join(desc_parts) if desc_parts else ""
         self.raw_text = description # for tagging
 
-        open_date = parse_date(synopsis.get('postingDate'))
-        close_date = parse_date(synopsis.get('responseDate'))
-        eligibility = synopsis.get('applicantEligibilityDesc') or "Not specified"
+        open_date = parse_date(synopsis.get('postingDate') or forecast.get('postingDate'))
+        close_date = parse_date(synopsis.get('responseDate') or forecast.get('estApplicationResponseDate'))
+        
+        eligibility = synopsis.get('applicantEligibilityDesc')
+        if not eligibility and forecast.get('applicantEligibilityDesc'):
+            eligibility = forecast.get('applicantEligibilityDesc')
+        elif not eligibility:
+            eligibility = "Not specified"
 
         # Award parsing natively from the JSON payload
-        award_min, award_max, award_range = self._parse_api_currency(synopsis)
+        award_min, award_max, award_range = self._parse_api_currency(synopsis if synopsis.get('awardCeiling') else forecast)
 
         return {
             "foa_id": str(foa_id),
