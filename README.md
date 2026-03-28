@@ -1,36 +1,64 @@
 # GSoC 2026: AI-Powered Funding Intelligence (ISSR4)
 
-**Test Target:** [NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
-
-> [!WARNING]
-> This implementation focuses primarily on the NSF portal for the sake of this evaluation. For the full project, I plan to scale this architecture to support NIH, DOE, and other major funding platforms using our modular provider system.
+**Test Targets (Multi-Source Batch):** 
+1. [NSF 26-506 (PESOSE)](https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation)
+2. [Grants.gov (RFA-AG-25-017)](https://www.grants.gov/search-results-detail/352941)
 
 ## The Problem
+Research teams waste hours manually parsing government funding portals. FOAs are scattered all over the place, vary wildly in structure (HTML vs SPA), and are hard to track. We lose critical time to manual scraping that should go to actual research and proposal writing.
+
+## The Solution: A Modular Multi-Source Engine
+This repository contains the screening task for the FOA Ingestion and Semantic Tagging pipeline. Instead of a brittle, single-site web scraper, this implements an **Advanced Object-Oriented Provider Architecture**. It automatically detects the source URL, routes to the correct extraction strategy (DOM parsing vs API interception), and normalizes the data into a strict `Pydantic` schema.
+
+### Current Platform Support
+
+| Platform | Frontend Type | Ingestion Strategy | Data Quality |
+|----------|---------------|---------------------|--------------|
+| **NSF** | Static HTML | Hybrid DOM Parsing (`Trafilatura` + `BeautifulSoup`) | High (Full text & strict metadata) |
+| **Grants.gov** | Dynamic SPA (Angular/React) | **Hidden API Interception** (Bypasses DOM entirely) | High (Direct JSON payload extraction) |
+
+## System Architecture
 
 ```mermaid
 graph TD
-    A[FOA URL Input] -->|requests| B(ExtractionEngine)
-    B -->|trafilatura + BeautifulSoup| C{Text/DOM Parsing}
-    C -->|Clean Text| D[SemanticTagger]
-    D -->|ontology.json| E[Confidence Scoring]
-    E --> F{Pydantic Validation}
-    F -->|Strict Schema| G[(foa.json)]
-    F -->|Strict Schema| H[(foa.csv)]
+    A[Batch URL Input] --> B(EngineFactory)
+    B -->|Detects nsf.gov| C[NSFProvider]
+    B -->|Detects grants.gov| D[GrantsGovProvider]
+    
+    C -->|Trafilatura/BS4| E{Raw Text & Metadata}
+    D -->|REST API Interception| E
+    
+    E --> F[SemanticTagger]
+    F -->|ontology.json| G[Normalized Scoring]
+    G --> H{Pydantic Validation}
+    
+    H -->|Strict Schema| I[(foa.json)]
+    H -->|Strict Schema| J[(foa.csv)]
     
     style A fill:#f9f,stroke:#333,stroke-width:2px
-    style G fill:#bbf,stroke:#333,stroke-width:1px
-    style H fill:#bbf,stroke:#333,stroke-width:1px
+    style I fill:#bbf,stroke:#333,stroke-width:1px
+    style J fill:#bbf,stroke:#333,stroke-width:1px
 ```
 
 ## Engineering Philosophy
-Building for research needs more than just pulling text. It needs reliability. Here is how this pipeline works:
+1. **Strict Data (Pydantic):** Government sites are messy. By pushing data through a strict Pydantic model we ensure databases don't break on bad dates or weird currency text.
+2. **Smart Bypassing:** Instead of fighting Grants.gov's heavy JavaScript frontend with brittle Selenium scripts, the `GrantsGovProvider` intercepts the backend REST API directly.
+3. **Weighted Tagging:** Just matching keywords is not enough. The `SemanticTagger` loads an external `ontology.json` to calculate normalized confidence scores where the sum of all tags equals 1.0.
+4. **Rich Terminal UI:** Built with `argparse` and `rich`, the pipeline gives a colorful, clear terminal UI to summarize batch extractions.
 
-1. **Strict Data (Pydantic):** Government sites are messy. By pushing data through a strict Pydantic model we make sure databases don't break on bad dates or weird currency text.
-2. **Clean Signal (Trafilatura):** Normal web scraping pulls in navbars and HTML junk that ruins tagging. This uses trafilatura to strip the noise and keep only the real grant text.
-3. **Multi-Source Handling (Optimized for NSF):** The current ingestion module is optimized for static government portals (like NSF) where content is available in the initial DOM.
-4. **The SPA Roadmap (Grants.gov):** Many portals like Grants.gov are built as Single Page Apps (SPA) that require JavaScript execution. For the full GSoC project I will integrate a headless browser like Playwright to handle these dynamic environments.
-5. **Weighted Tagging:** Just matching keywords is not enough. The SemanticTagger loads an external ontology.json to calculate normalized confidence scores where the sum of all tags equals 1.0.
-6. **Clean CLI:** Tools should be nice to use. Built with argparse and rich the pipeline gives a nice colorful terminal UI to summarize the extraction.
+---
+
+## 🚀 The Main Stage: GSoC Full Project Roadmap
+While this screening task proves the core pipeline and multi-source capability, the full summer project will expand this foundation into a production-ready intelligence system:
+
+| Phase | Planned Implementation for Main Stage |
+|-------|---------------------------------------|
+| **Expanded Ingestion** | Add providers for NIH, DOE, and DOD. Implement Playwright headless browser fallback for aggressive SPAs without public APIs. |
+| **Advanced Semantic Tagging** | Upgrade from deterministic ontology to **LLM-assisted classification** and sentence-transformer embeddings (Hugging Face) for deep semantic matching. |
+| **Vector Indexing** | Integrate FAISS or ChromaDB to allow researchers to run similarity searches against historical grants. |
+| **Automated Workflows** | Deploy the pipeline as a daily cron job that pushes new opportunities to a lightweight web UI or Slack/Teams alerts. |
+
+---
 
 ## Execution Instructions
 
@@ -39,47 +67,22 @@ Building for research needs more than just pulling text. It needs reliability. H
 pip install -r requirements.txt
 ```
 
-### 2. Run the Engine
+### 2. Run the Batch Engine
+Process multiple platforms simultaneously by passing a comma-separated list of URLs:
 ```bash
-python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation" --out_dir ./out
+python main.py --urls "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,https://www.grants.gov/search-results-detail/352941" --out_dir ./out
 ```
 
 ### 3. The Output
-The pipeline generates foa.json and foa.csv in the output directory.
+The pipeline generates `foa.json` (as an array of records) and `foa.csv` in the output directory.
 
-**Sample JSON Output (v1.8.0):**
-```json
-{
-    "metadata": {
-        "generated_at": "2026-03-27T17:08:55Z",
-        "schema_version": "1.8.0",
-        "extractor_engine": "ISSR4-Context-Aware-Engine"
-    },
-    "data": {
-        "foa_id": "NSF26-506",
-        "title": "NSF 26-506: Pathways to Enable Secure Open-Source Ecosystems (PESOSE)...",
-        "agency": "National Science Foundation (NSF)",
-        "open_date": "2026-02-19",
-        "close_date": "2027-03-02",
-        "eligibility": "Proposals may only be submitted by the following: - Institutions of Higher Education...",
-        "program_description": "The Pathways to Enable Secure Open-Source Ecosystems (PESOSE) program supports...",
-        "award_range": "$300,000 - $40,000,000",
-        "source_url": "https://www.nsf.gov/funding/opportunities/...",
-        "tags": {
-            "research_domains": ["artificial_intelligence", "computer_systems", "health_sciences"],
-            "methods_approaches": ["open_source"],
-            "populations": ["educational_institutions"],
-            "sponsor_themes": ["innovation", "security"]
-        },
-        "tag_scores": {
-            "artificial_intelligence": 0.1379,
-            "computer_systems": 0.2207,
-            "health_sciences": 0.1379,
-            "open_source": 0.069,
-            "educational_institutions": 0.1103,
-            "innovation": 0.0483,
-            "security": 0.2759
-        }
-    }
-}
+**Sample Terminal Output:**
+```text
+Batch Extraction Summary                           
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ FOA ID        ┃ Agency                            ┃ Award Range            ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ NSF26-506     │ National Science Foundation (NSF) │ $300,000 - $40,000,000 │
+│ RFA-AG-25-017 │ National Institutes of Health     │ Up to $500,000         │
+└───────────────┴───────────────────────────────────┴────────────────────────┘
 ```
