@@ -12,14 +12,15 @@ import trafilatura
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from urllib.parse import urlparse, parse_qs
 
 console = Console()
 
-# --- Pydantic Schema Definition (V2.3.0 - Multi-Record Batch) ---
+# --- Pydantic Schema Definition (V2.4.0 - Advanced Extraction) ---
 class FOAMetadata(BaseModel):
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
-    schema_version: str = "2.3.0"
-    extractor_engine: str = "ISSR4-Batch-MultiSource-Engine"
+    schema_version: str = "2.4.0"
+    extractor_engine: str = "ISSR4-Advanced-MultiSource-Engine"
 
 class FOARecord(BaseModel):
     foa_id: str
@@ -38,128 +39,186 @@ class FOARecord(BaseModel):
 
 class FOAResponse(BaseModel):
     metadata: FOAMetadata = Field(default_factory=FOAMetadata)
-    data: List[FOARecord]  # Changed to list for batch processing
+    data: List[FOARecord]
 
-# --- Modular Provider Architecture ---
+# --- Helper Functions ---
+def sanitize_text(text: str) -> str:
+    if not text: return ""
+    text = "".join(ch for ch in text if ch.isprintable() or ch in "\n\t")
+    return " ".join(text.replace('\\', '/').replace('"', "'").split())
 
-class BaseExtractor:
-    def extract(self, html: str, clean_text: str) -> dict:
-        raise NotImplementedError
+def parse_date(date_str: str) -> Optional[str]:
+    if not date_str: return None
+    try:
+        # Try different formats, particularly those used by Grants.gov
+        if "EDT" in date_str or "EST" in date_str or "PDT" in date_str or "PST" in date_str:
+            # Simple fallback for Grants.gov API dates like "Mar 13, 2024 10:35:19 AM EDT"
+            parts = date_str.split()
+            if len(parts) >= 3:
+                clean_str = f"{parts[0]} {parts[1].replace(',', '')} {parts[2]}"
+                return datetime.strptime(clean_str, "%b %d %Y").strftime("%Y-%m-%d")
+        return datetime.strptime(date_str, "%B %d, %Y").strftime("%Y-%m-%d")
+    except:
+        return None
 
-class NSFExtractor(BaseExtractor):
-    def extract(self, html: str, clean_text: str) -> dict:
-        desc_match = re.search(r'(?i)(Synopsis of Program|Program Description)[:\s]+(.*?)(?=\nIII\.|\nAward Information|$)', clean_text, re.DOTALL)
-        description = desc_match.group(2).strip() if desc_match else clean_text
-        elig_match = re.search(r'(?i)Who May Submit Proposals:(.*?)(?=Who May Serve as PI|V\. Proposal|$)', clean_text, re.DOTALL)
-        eligibility = elig_match.group(1).strip() if elig_match else "Refer to NSF solicitation."
-        return {
-            "agency": "National Science Foundation (NSF)",
-            "description": description,
-            "eligibility": eligibility
-        }
+# --- Advanced OOP Modular Provider Architecture ---
 
-class GrantsGovExtractor(BaseExtractor):
-    def extract(self, html: str, clean_text: str) -> dict:
-        soup = BeautifulSoup(html, 'html.parser')
-        agency = "Grants.gov Portal (Federal)"
-        agency_elem = soup.find('span', class_=re.compile('agency'))
-        if agency_elem:
-            agency = agency_elem.text.strip()
-        description = ""
-        desc_elem = soup.find('div', class_=re.compile('description|synopsis'))
-        if desc_elem:
-            description = desc_elem.get_text(separator=' ', strip=True)
-        else:
-            description = clean_text[:2000]
-        eligibility = "Refer to Grants.gov for full eligibility details."
-        elig_elem = soup.find(text=re.compile(r'eligibility', re.I))
-        if elig_elem:
-            parent = elig_elem.find_parent('div')
-            eligibility = parent.get_text(separator=' ', strip=True) if parent else eligibility
-        return {
-            "agency": agency,
-            "description": description,
-            "eligibility": eligibility
-        }
-
-class ExtractionEngine:
+class BaseProvider:
+    """Abstract base class for all FOA data providers."""
     def __init__(self, url: str):
         self.url = url
-        self.raw_html = ""
-        self.clean_text = ""
-        self.soup = None
-        if "nsf.gov" in url.lower():
-            self.provider = NSFExtractor()
-        else:
-            self.provider = GrantsGovExtractor()
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) FOA-Intelligence-Bot/1.0'
+        })
+        self.raw_text = ""
 
-    def fetch(self):
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        try:
-            response = requests.get(self.url, headers=headers, timeout=15)
-            response.raise_for_status()
-            self.raw_html = response.text
-        except Exception as e:
-            console.print(f"[bold red]❌ Network Error: {self.url} ({e})[/bold red]")
-            raise
+    def fetch_and_extract(self) -> dict:
+        raise NotImplementedError("Subclasses must implement fetch_and_extract")
+
+class NSFProvider(BaseProvider):
+    """Extraction strategy for NSF using DOM parsing and Trafilatura."""
+    def fetch_and_extract(self) -> dict:
+        response = self.session.get(self.url, timeout=15)
+        response.raise_for_status()
         
-        self.soup = BeautifulSoup(self.raw_html, 'html.parser')
-        extracted = trafilatura.extract(self.raw_html, include_tables=True)
-        self.clean_text = extracted if extracted else self.soup.get_text(separator='\n', strip=True)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        extracted = trafilatura.extract(response.text, include_tables=True)
+        self.raw_text = extracted if extracted else soup.get_text(separator='\n', strip=True)
 
-    def sanitize(self, text: str) -> str:
-        if not text: return ""
-        text = "".join(ch for ch in text if ch.isprintable() or ch in "\n\t")
-        return " ".join(text.replace('\\', '/').replace('"', "'").split())
-
-    def parse_currency_values(self) -> tuple[Optional[int], Optional[int], str]:
-        min_val, max_val = None, None
-        min_match = re.search(r'Award Min[:\s]*\$([\d,]+)', self.clean_text, re.IGNORECASE)
-        max_match = re.search(r'Award Max[:\s]*\$([\d,]+)', self.clean_text, re.IGNORECASE)
-        if min_match:
-            min_val = int(re.sub(r'[,.]', '', min_match.group(1)))
-        if max_match:
-            max_val = int(re.sub(r'[,.]', '', max_match.group(1)))
-        if not min_val and not max_val:
-            matches = re.findall(r'\$\s*([\d,]+)', self.clean_text)
-            if matches:
-                vals = [int(re.sub(r'[,.]', '', m)) for m in matches if int(re.sub(r'[,.]', '', m)) > 1000]
-                if vals:
-                    min_val, max_val = min(vals), max(vals)
-        if min_val and max_val and min_val != max_val:
-            range_str = f"${min_val:,} - ${max_val:,}"
-        elif max_val:
-            range_str = f"Up to ${max_val:,}"
-        elif min_val:
-            range_str = f"Minimum ${min_val:,}"
-        else:
-            range_str = "Not specified"
-        return min_val, max_val, range_str
-
-    def extract_fields(self) -> dict:
-        title = self.soup.find('title').text.strip() if self.soup.find('title') else "FOA Document"
-        id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3})', self.clean_text)
-        foa_id = id_match.group(0).replace(' ', '') if id_match else f"FOA-INGEST-{int(datetime.now().timestamp())}"
-        date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.clean_text)
+        title = soup.find('title').text.strip() if soup.find('title') else "NSF FOA"
+        id_match = re.search(r'([A-Z]+[\s-]*\d{2}-\d{3,4})', self.raw_text)
+        foa_id = id_match.group(0).replace(' ', '') if id_match else f"NSF-{int(datetime.now().timestamp())}"
         
-        def to_iso(d_str):
-            try: return datetime.strptime(d_str, "%B %d, %Y").strftime("%Y-%m-%d")
-            except: return None
+        date_matches = re.findall(r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}', self.raw_text)
+        
+        desc_match = re.search(r'(?i)(Synopsis of Program|Program Description)[:\s]+(.*?)(?=\nIII\.|\nAward Information|$)', self.raw_text, re.DOTALL)
+        description = desc_match.group(2).strip() if desc_match else self.raw_text[:2000]
+        
+        elig_match = re.search(r'(?i)Who May Submit Proposals:(.*?)(?=Who May Serve as PI|V\. Proposal|$)', self.raw_text, re.DOTALL)
+        eligibility = elig_match.group(1).strip() if elig_match else "Refer to NSF solicitation."
 
-        p_data = self.provider.extract(self.raw_html, self.clean_text)
-        award_min, award_max, award_range = self.parse_currency_values()
+        # Parse awards
+        award_min, award_max, award_range = self._parse_currency(self.raw_text)
 
         return {
             "foa_id": foa_id,
-            "title": self.sanitize(title),
-            "agency": p_data["agency"],
-            "open_date": to_iso(date_matches[0]) if len(date_matches) > 0 else None,
-            "close_date": to_iso(date_matches[-1]) if len(date_matches) > 1 else None,
-            "eligibility": self.sanitize(p_data["eligibility"]),
-            "program_description": self.sanitize(p_data["description"]),
-            "award_min": award_min, "award_max": award_max, "award_range": award_range,
-            "source_url": self.url,
+            "title": sanitize_text(title),
+            "agency": "National Science Foundation (NSF)",
+            "open_date": parse_date(date_matches[0]) if len(date_matches) > 0 else None,
+            "close_date": parse_date(date_matches[-1]) if len(date_matches) > 1 else None,
+            "eligibility": sanitize_text(eligibility),
+            "program_description": sanitize_text(description),
+            "award_min": award_min,
+            "award_max": award_max,
+            "award_range": award_range,
+            "source_url": self.url
         }
+
+    def _parse_currency(self, text: str):
+        min_val, max_val = None, None
+        matches = re.findall(r'\$\s*([\d,]+)', text)
+        if matches:
+            vals = [int(re.sub(r'[,.]', '', m)) for m in matches if int(re.sub(r'[,.]', '', m)) > 1000]
+            if vals:
+                min_val, max_val = min(vals), max(vals)
+        if min_val and max_val and min_val != max_val:
+            return min_val, max_val, f"${min_val:,} - ${max_val:,}"
+        elif max_val:
+            return None, max_val, f"Up to ${max_val:,}"
+        return None, None, "Not specified"
+
+
+class GrantsGovProvider(BaseProvider):
+    """
+    Advanced extraction strategy for Grants.gov avoiding SPA DOM scraping.
+    Carefully intercepts the backend REST API by extracting the Opportunity ID.
+    """
+    API_ENDPOINT = "https://apply07.grants.gov/grantsws/rest/opportunity/details"
+
+    def fetch_and_extract(self) -> dict:
+        # Extract Opportunity ID from the URL
+        opp_id = self._extract_opp_id(self.url)
+        if not opp_id:
+            raise ValueError(f"Could not extract oppId from Grants.gov URL: {self.url}")
+
+        # Post directly to the Grants.gov details API
+        response = self.session.post(self.API_ENDPOINT, data={"oppId": opp_id}, timeout=15)
+        response.raise_for_status()
+        
+        data = response.json()
+        synopsis = data.get('synopsis', {})
+
+        title = data.get('opportunityTitle') or "Untitled"
+        foa_id = data.get('opportunityNumber') or opp_id
+        agency = synopsis.get('agencyName') or "Grants.gov Portal (Federal)"
+        description = synopsis.get('synopsisDesc') or ""
+        self.raw_text = description # for tagging
+
+        open_date = parse_date(synopsis.get('postingDate'))
+        close_date = parse_date(synopsis.get('responseDate'))
+        eligibility = synopsis.get('applicantEligibilityDesc') or "Not specified"
+
+        # Award parsing natively from the JSON payload
+        award_min, award_max, award_range = self._parse_api_currency(synopsis)
+
+        return {
+            "foa_id": str(foa_id),
+            "title": sanitize_text(title),
+            "agency": sanitize_text(agency),
+            "open_date": open_date,
+            "close_date": close_date,
+            "eligibility": sanitize_text(eligibility),
+            "program_description": sanitize_text(description),
+            "award_min": award_min,
+            "award_max": award_max,
+            "award_range": award_range,
+            "source_url": self.url
+        }
+
+    def _extract_opp_id(self, url: str) -> Optional[str]:
+        if '/search-results-detail/' in url:
+            parts = url.split('/search-results-detail/')
+            if len(parts) == 2:
+                return parts[1].strip('/')
+        parsed = urlparse(url)
+        params = parse_qs(parsed.query)
+        if 'oppId' in params:
+            return params['oppId'][0]
+        return None
+
+    def _parse_api_currency(self, synopsis: dict):
+        min_val, max_val = None, None
+        floor_str = synopsis.get('awardFloor', '')
+        if floor_str and str(floor_str).lower() != 'none':
+            try: min_val = int(float(str(floor_str).replace(',', '')))
+            except: pass
+        
+        ceiling_str = synopsis.get('awardCeiling', '')
+        if ceiling_str and str(ceiling_str).lower() != 'none':
+            try: max_val = int(float(str(ceiling_str).replace(',', '')))
+            except: pass
+
+        if min_val and max_val and min_val != max_val:
+            return min_val, max_val, f"${min_val:,} - ${max_val:,}"
+        elif max_val:
+            return min_val, max_val, f"Up to ${max_val:,}"
+        elif min_val:
+            return min_val, max_val, f"Minimum ${min_val:,}"
+        return None, None, "Not specified"
+
+
+# --- Context Factory ---
+class EngineFactory:
+    @staticmethod
+    def get_provider(url: str) -> BaseProvider:
+        url_lower = url.lower()
+        if "nsf.gov" in url_lower:
+            return NSFProvider(url)
+        elif "grants.gov" in url_lower:
+            return GrantsGovProvider(url)
+        else:
+            raise ValueError("Unsupported platform URL.")
 
 # --- Semantic Tagger ---
 class SemanticTagger:
@@ -186,8 +245,8 @@ class SemanticTagger:
         return grouped, final_scores
 
 def main():
-    parser = argparse.ArgumentParser(description="Batch Multi-Source FOA Ingestion Pipeline")
-    parser.add_argument("--urls", required=True, help="Comma-separated list of URLs (e.g., 'url1,url2')")
+    parser = argparse.ArgumentParser(description="Advanced Multi-Source FOA Ingestion")
+    parser.add_argument("--urls", required=True, help="Comma-separated list of URLs")
     parser.add_argument("--out_dir", required=True)
     args = parser.parse_args()
 
@@ -195,18 +254,20 @@ def main():
     records = []
 
     for url in urls:
-        console.print(f"[cyan]Processing: {url}[/cyan]")
-        engine = ExtractionEngine(url)
+        console.print(f"[cyan]Initializing Provider for: {url}[/cyan]")
         try:
-            engine.fetch()
-            raw_fields = engine.extract_fields()
+            provider = EngineFactory.get_provider(url)
+            raw_fields = provider.fetch_and_extract()
+            
             tagger = SemanticTagger()
-            grouped_tags, tag_scores = tagger.group_tags(engine.clean_text)
+            grouped_tags, tag_scores = tagger.group_tags(provider.raw_text)
             raw_fields["tags"] = grouped_tags
             raw_fields["tag_scores"] = tag_scores
+            
             records.append(FOARecord(**raw_fields))
+            console.print(f"[green]✓ Extracted: {raw_fields['foa_id']}[/green]")
         except Exception as e:
-            console.print(f"[red]Failed to process {url}: {e}[/red]")
+            console.print(f"[bold red]❌ Failed to process {url}: {e}[/bold red]")
             continue
 
     response = FOAResponse(data=records)
