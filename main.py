@@ -246,11 +246,11 @@ class SemanticTagger:
 
 def main():
     parser = argparse.ArgumentParser(description="Advanced Multi-Source FOA Ingestion")
-    parser.add_argument("--urls", required=True, help="Comma-separated list of URLs")
+    parser.add_argument("--url", required=True, help="URL or comma-separated list of URLs")
     parser.add_argument("--out_dir", required=True)
     args = parser.parse_args()
 
-    urls = [u.strip() for u in args.urls.split(',')]
+    urls = [u.strip() for u in args.url.split(',')]
     records = []
 
     for url in urls:

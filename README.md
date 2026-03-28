@@ -67,10 +67,22 @@ While this screening task proves the core pipeline and multi-source capability, 
 pip install -r requirements.txt
 ```
 
-### 2. Run the Batch Engine
-Process multiple platforms simultaneously by passing a comma-separated list of URLs:
+### 2. Run the Engine
+The pipeline strictly adheres to the execution format requested in the evaluation. You can pass a single URL, or a comma-separated string to process both platforms in one batch:
+
+**Option A: Single URL Evaluation (NSF)**
 ```bash
-python main.py --urls "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,https://www.grants.gov/search-results-detail/352941" --out_dir ./out
+python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation" --out_dir ./out
+```
+
+**Option B: Single URL Evaluation (Grants.gov)**
+```bash
+python main.py --url "https://www.grants.gov/search-results-detail/352941" --out_dir ./out
+```
+
+**Option C: Multi-Source Batch Processing**
+```bash
+python main.py --url "https://www.nsf.gov/funding/opportunities/pesose-pathways-enable-secure-open-source-ecosystems/nsf26-506/solicitation,https://www.grants.gov/search-results-detail/352941" --out_dir ./out
 ```
 
 ### 3. The Output
