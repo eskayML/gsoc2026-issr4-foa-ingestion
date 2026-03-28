@@ -2,7 +2,7 @@
   "research_domains": {
     "artificial_intelligence": {"keywords": ["machine learning", "artificial intelligence", "deep learning", "neural network", "generative ai", "natural language processing"], "weight": 1.0},
     "computer_systems": {"keywords": ["infrastructure", "computing", "software engineering", "cybersecurity", "distributed systems", "cloud computing"], "weight": 0.8},
-    "health_sciences": {"keywords": ["clinical", "healthcare", "biology", "proteomics", "genomics", "medical", "public health"], "weight": 1.0}
+    "health_sciences": {"keywords": ["clinical", "healthcare", "biology", "proteomics", "genomics", "medical", "public health", "aging"], "weight": 1.0}
   },
   "methods_approaches": {
     "data_science": {"keywords": ["data analysis", "statistical modeling", "predictive analytics", "big data"], "weight": 0.9},

@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "generated_at": "2026-03-28T00:00:12.720131Z",
+        "generated_at": "2026-03-28T00:40:37.226851Z",
         "schema_version": "2.4.0",
         "extractor_engine": "ISSR4-Advanced-MultiSource-Engine"
     },
@@ -35,27 +35,27 @@
                 ]
             },
             "tag_scores": {
-                "artificial_intelligence": 0.1379,
-                "computer_systems": 0.2207,
-                "health_sciences": 0.1379,
-                "open_source": 0.069,
-                "educational_institutions": 0.1103,
-                "innovation": 0.0483,
-                "security": 0.2759
+                "artificial_intelligence": 0.129,
+                "computer_systems": 0.2065,
+                "health_sciences": 0.1935,
+                "open_source": 0.0645,
+                "educational_institutions": 0.1032,
+                "innovation": 0.0452,
+                "security": 0.2581
             }
         },
         {
-            "foa_id": "RFA-AG-25-017",
-            "title": "Exploring Proteogenomic Approaches to Unravel the Mechanisms of Mis-Folded Protein Accumulation in Tauopathies (R01 Clinical Trial Not Allowed)",
+            "foa_id": "RFA-AI-27-019",
+            "title": "Impact of Initial Influenza Exposure on Immunity in Infants (U01 Clinical Trial Not Allowed)",
             "agency": "National Institutes of Health",
-            "open_date": "2024-03-13",
-            "close_date": "2024-06-10",
-            "eligibility": "Other Eligible Applicants include the following: Alaska Native and Native Hawaiian Serving Institutions; Asian American Native American Pacific Islander Serving Institutions (AANAPISISs); Eligible Agencies of the Federal Government; Faith-based or Community-based Organizations; Hispanic-serving Institutions; Historically Black Colleges and Universities (HBCUs); Indian/Native American Tribal Governments (Other than Federally Recognized); Non-domestic (non-U.S.) Entities (Foreign Organizations); Regional Organizations; Tribally Controlled Colleges and Universities (TCCUs) ; U.S. Territory or Possession.",
-            "program_description": "This funding opportunity invites innovative research proposals to explore the accumulation of misprocessed proteins in Tauopathies within specific brain regions and cell types. We encourage collaborative efforts to create advanced single-cell or single-cell type proteogenomic platforms. These platforms aim to shed light on dynamic changes in protein-misfolding responses in neuronal proteomes and their potential biological consequences during aging and the development of AD and ADRD.",
+            "open_date": "2026-02-10",
+            "close_date": "2026-06-04",
+            "eligibility": "Refer to Section III. Eligibility Information in the NOFO for additional information on eligibility.Foreign Organizations/International CollaborationsNon-domestic (non-U.S.) Entities (Foreign Organizations) are eligible to apply.Non-domestic (non-U.S.) components of U.S. Organizations are eligible to apply.Foreign components, as defined in the NIH Grants Policy Statement, are allowed.NIH will no longer issue awards (i.e., new, renewal, or non-competing continuation) to domestic or foreign entities that involve foreign subawards/subcontracts. All NIH-funded research involving foreign subawards/subcontracts must be submitted in response to a NOFO that is specifically designated for funded international collaborations. This new requirement was effective, May 1, 2025.Applications involving foreign subawards/subcontracts submitted in response to this NOFO will be deemed noncompliant and will not be considered for funding. This policy applies to all monetary international collaborations resulting in foreign subawards/subcontracts, however, it does not preclude unfunded international collaborations or foreign components, funding for foreign consultants, or procurement of unique equipment or supplies from foreign vendors.",
+            "program_description": "The purpose of this notice of funding opportunity (NOFO) is to support the establishment or continuation of longitudinal infant cohorts to determine and compare how initial and repeated natural influenza infections and/or influenza vaccinations shape infant and childhood immunity to future influenza exposures. The goal of this research is to understand how these exposures influence immune responses to subsequent influenza infections and/or vaccines and provide key information to facilitate design of durable, broadly protective influenza vaccines.",
             "award_min": null,
-            "award_max": 500000,
-            "award_range": "Up to $500,000",
-            "source_url": "https://www.grants.gov/search-results-detail/352941",
+            "award_max": 3000000,
+            "award_range": "Up to $3,000,000",
+            "source_url": "https://www.grants.gov/search-results-detail/359939",
             "tags": {
                 "research_domains": [],
                 "methods_approaches": [],
